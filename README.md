@@ -1,0 +1,4 @@
+Dependências:
+
+pandas
+numpy
