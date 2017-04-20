@@ -9,9 +9,13 @@ def read_from_csv(filename):
     raw_data = raw_data.values #Esse eh um array do numpy
     return raw_data
 
+def cvt_np_array(matrix):
+    if type(matrix) != np.ndarray:
+        matrix = np.array(matrix)
+    return matrix
+
 def print_data_overview(raw_data):    
-    if type(raw_data) != np.ndarray:
-        raw_data = np.array(raw_data)
+    raw_data = cvt_np_array(raw_data)
     
     num_elems = np.shape(raw_data)[0]
     num_vars = np.shape(raw_data)[1]
@@ -23,19 +27,15 @@ def euclid_dist(vect1, vect2):
     if len(vect1) != len(vect2):
         raise ValueError('The size of the vectors must be equal')
 
-    if type(vect1) != np.ndarray:
-        vect1 = np.array(vect1)
-
-    if type(vect2) != np.ndarray:
-        vect2 = np.array(vect2)
+    vect1 = cvt_np_array(vect1)
+    vect2 = cvt_np_array(vect2)
     
     diff = vect1 - vect2
     
     return np.sqrt(np.dot(diff, diff))
 
 def calculate_diss_matrix(raw_data):
-    if type(raw_data) != np.ndarray:
-        raw_data = np.array(raw_data)
+    raw_data = cvt_np_array(raw_data)
     
     num_elems = np.shape(raw_data)[0]
     diss_matrix = np.zeros((num_elems, num_elems))
