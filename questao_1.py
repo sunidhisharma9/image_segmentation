@@ -6,7 +6,7 @@ import math as m
 
 def read_from_csv(filename):
     raw_data = pd.read_csv(filename, sep=",", header=2)
-    raw_data = raw_data.values #Esse eh um array do numpy
+    raw_data = raw_data.values #Numpy array
     return raw_data
 
 def cvt_np_array(matrix):
@@ -49,8 +49,22 @@ def calculate_diss_matrix(raw_data):
 
     return diss_matrix
 
+def create_views(raw_data):
+    size_view_1 = 9
+    size_view_2 = 10
+    num_rows = np.shape(raw_data)[0]
+    view_1 = raw_data[np.ix_(range(num_rows),range(size_view_1))]
+    view_2 = raw_data[np.ix_(range(num_rows),range(size_view_2))]
+    return [view_1, view_2]
+
 #Begin
 
 raw_data = read_from_csv('data/segmentation.data.txt')
 print_data_overview(raw_data)
-diss_matrix = calculate_diss_matrix(raw_data)
+
+#Create the separated views
+[view_1, view_2] = create_views(raw_data)
+
+#Create the dissimilarity matrix for both views
+diss_matrix_1 = calculate_diss_matrix(view_1)
+diss_matrix_2 = calculate_diss_matrix(view_2)
