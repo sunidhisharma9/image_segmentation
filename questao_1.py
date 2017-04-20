@@ -54,7 +54,7 @@ def create_views(raw_data):
     size_view_2 = 10
     num_rows = np.shape(raw_data)[0]
     view_1 = raw_data[np.ix_(range(num_rows),range(size_view_1))]
-    view_2 = raw_data[np.ix_(range(num_rows),range(size_view_2))]
+    view_2 = raw_data[np.ix_(range(num_rows),range(size_view_1, size_view_2))]
     return [view_1, view_2]
 
 #Begin
