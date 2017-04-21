@@ -12,10 +12,12 @@ class ClusterMaker:
     #k is the number of clusters
     #p is the number of views
     #q is the number of elements of a cluster prototype
-    def __init__(self, filename, k, q, read_files=False):
+    def __init__(self, filename, k, q, m, s, read_files=False):
         self.k = k
         self.q = q
         self.p = 2
+        self.m = m
+        self.s = s
         
         if read_files:
             print 'Reading input file'
@@ -38,8 +40,7 @@ class ClusterMaker:
         print 'Dissimilarity matrices calculated'
         self.n = np.shape(self.diss_matrix_1)[0]
         self.initialize_clustering()
-        print self.dist_to_cluster(0 , 0)
-        
+
     def read_from_csv(self, filename):
         rd = pd.read_csv(filename, sep=",", header=2)
         rd = rd.values #Numpy array
@@ -81,6 +82,13 @@ class ClusterMaker:
             sum += self.Lambda[p][cluster_index]*partial_sum
         return sum
 
+    def cost(self):
+        sum = 0
+        for k in xrange(self.k):
+            for i in xrange(self.n):
+                sum += pow(self.U[i][k],self.m)*self.dist_to_cluster(i, k)
+        return sum
+    
     @staticmethod
     def cvt_np_array(matrix):
         if type(matrix) != np.ndarray:
@@ -127,4 +135,4 @@ class ClusterMaker:
     
 #Begin
 
-cm = ClusterMaker('data/segmentation.data.txt', 7, 3, read_files=True) 
+cm = ClusterMaker('data/segmentation.data.txt', 7, 3, 1.6, 1, read_files=True) 
