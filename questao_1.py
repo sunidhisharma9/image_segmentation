@@ -57,6 +57,25 @@ def create_views(raw_data):
     view_2 = raw_data[np.ix_(range(num_rows),range(size_view_1, size_view_2))]
     return [view_1, view_2]
 
+#n is the number of elements to be clustered
+#k is the number of clusters
+#p is the number of views
+#q is the number of elements of a cluster prototype
+def initialize_clustering(n, k, p, q):
+    U = np.ones((n,k))
+    Lambda = np.ones((p, k))
+
+    #shuffle indexes to randomly initialize cluster prototypes
+    all_indexes = range(n)
+    np.random.shuffle(all_indexes)
+
+    G = np.zeros((k,q))
+
+    for i in xrange(k):
+        G[i] = np.array(all_indexes[i*q:(i+1)*q])
+    
+    return [U, Lambda, G]
+
 #Begin
 
 raw_data = read_from_csv('data/segmentation.test.txt')
