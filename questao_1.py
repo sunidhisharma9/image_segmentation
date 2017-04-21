@@ -42,7 +42,7 @@ class ClusterMaker:
         
     def run_clustering(self):
         self.initialize_clustering()
-        
+    
     def read_from_csv(self, filename):
         rd = pd.read_csv(filename, sep=",", header=2)
         rd = rd.values #Numpy array
@@ -84,13 +84,18 @@ class ClusterMaker:
             summ += self.Lambda[p][cluster_index]*partial_sum
         return summ
 
+    def cost_by_cluster(self, cluster_index):
+        summ = 0
+        for i in xrange(self.n):
+                summ += pow(self.U[i][cluster_index],self.m)*self.dist_to_cluster(i, cluster_index)
+        return summ
+    
     def cost(self):
         summ = 0
         for k in xrange(self.k):
-            for i in xrange(self.n):
-                summ += pow(self.U[i][k],self.m)*self.dist_to_cluster(i, k)
+            summ += self.cost_by_cluster(k)
         return summ
-
+    
     def update_U(self):
         for k in xrange(self.k):
             for i in xrange(self.n):
@@ -100,6 +105,7 @@ class ClusterMaker:
                     summ += pow(self.dist_to_cluster(i, k)/self.dist_to_cluster(i, h), pot_term) 
                 
                 self.U[i][k] = pow(summ, -1)
+
     
     @staticmethod
     def cvt_np_array(matrix):
