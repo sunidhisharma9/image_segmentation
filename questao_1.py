@@ -42,7 +42,7 @@ class ClusterMaker:
         
     def run_clustering(self):
         self.initialize_clustering()
-
+        
     def read_from_csv(self, filename):
         rd = pd.read_csv(filename, sep=",", header=2)
         rd = rd.values #Numpy array
@@ -75,21 +75,31 @@ class ClusterMaker:
         
 
     def dist_to_cluster(self, elem_index, cluster_index):
-        sum = 0
+        summ = 0
         for p in xrange(self.p):
             partial_sum = 0
             for j in xrange(self.q):
                 cluster = self.G[cluster_index]
                 partial_sum += self.diss[p][elem_index, cluster[j]]
-            sum += self.Lambda[p][cluster_index]*partial_sum
-        return sum
+            summ += self.Lambda[p][cluster_index]*partial_sum
+        return summ
 
     def cost(self):
-        sum = 0
+        summ = 0
         for k in xrange(self.k):
             for i in xrange(self.n):
-                sum += pow(self.U[i][k],self.m)*self.dist_to_cluster(i, k)
-        return sum
+                summ += pow(self.U[i][k],self.m)*self.dist_to_cluster(i, k)
+        return summ
+
+    def update_U(self):
+        for k in xrange(self.k):
+            for i in xrange(self.n):
+                summ = 0
+                pot_term = 1.0/(self.m - 1.0)
+                for h in xrange(self.k):
+                    summ += pow(self.dist_to_cluster(i, k)/self.dist_to_cluster(i, h), pot_term) 
+                
+                self.U[i][k] = pow(summ, -1)
     
     @staticmethod
     def cvt_np_array(matrix):
