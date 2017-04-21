@@ -59,7 +59,7 @@ def create_views(raw_data):
 
 #Begin
 
-raw_data = read_from_csv('data/segmentation.data.txt')
+raw_data = read_from_csv('data/segmentation.test.txt')
 print_data_overview(raw_data)
 
 #Create the separated views
