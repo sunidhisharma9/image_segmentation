@@ -42,11 +42,6 @@ class ClusterMaker:
         
     def run_clustering(self):
         self.initialize_clustering()
-##        print 'cost 1', self.cost()
-##        self.update_U()
-##        print 'cost 2', self.cost()
-##        self.update_Lambda()
-##        print 'cost 3', self.cost()
     
     def read_from_csv(self, filename):
         rd = pd.read_csv(filename, sep=",", header=2)
@@ -129,6 +124,26 @@ class ClusterMaker:
                     prod *= self.part_lambda_dist(j, k)
                 prod = pow(prod, 1.0/float(self.p))
                 self.Lambda[i][k] = prod/self.part_lambda_dist(i, k)
+
+    def part_G_sum(self, element_index, cluster_index):
+        summ = 0
+        for i in xrange(self.n):
+            partial_sum = 0
+            for j in xrange(self.p):
+                partial_sum += self.Lambda[j][cluster_index]*self.diss[j][i][element_index]
+            summ += pow(self.U[i][cluster_index], self.m)*partial_sum
+        return summ
+    
+    def update_G(self):
+        all_indexes = range(self.n)
+        all_index_dist = [[i, 0] for i in all_indexes]
+        for k in xrange(self.k):
+            len_id = len(all_index_dist)
+            for j in xrange(len_id):
+                all_index_dist[j][1] = self.part_G_sum(all_index_dist[j][0], k)
+            all_index_dist = sorted(all_index_dist, key= lambda x : x[1])
+            self.G[k] = np.array([a[0] for a in all_index_dist[:self.q]])
+            del all_index_dist[:self.q]
     
     @staticmethod
     def cvt_np_array(matrix):
