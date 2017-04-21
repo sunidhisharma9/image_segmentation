@@ -3,6 +3,9 @@
 import pandas as pd
 import numpy as np
 import math as m
+import pickle
+
+COMPUTE_DISS = False
 
 def read_from_csv(filename):
     raw_data = pd.read_csv(filename, sep=",", header=2)
@@ -78,12 +81,18 @@ def initialize_clustering(n, k, p, q):
 
 #Begin
 
-raw_data = read_from_csv('data/segmentation.test.txt')
-print_data_overview(raw_data)
+if COMPUTE_DISS:
 
-#Create the separated views
-[view_1, view_2] = create_views(raw_data)
+    raw_data = read_from_csv('data/segmentation.test.txt')
+    print_data_overview(raw_data)
 
-#Create the dissimilarity matrix for both views
-diss_matrix_1 = calculate_diss_matrix(view_1)
-diss_matrix_2 = calculate_diss_matrix(view_2)
+    #Create the separated views
+    [view_1, view_2] = create_views(raw_data)
+
+    #Create the dissimilarity matrix for both views
+    diss_matrix_1 = calculate_diss_matrix(view_1)
+    diss_matrix_2 = calculate_diss_matrix(view_2)
+else:
+    print 'Loading previous matrices'
+    diss_matrix_1 = pickle.load(open('diss_matrix_1.pickle','rb'))
+    diss_matrix_2 = pickle.load(open('diss_matrix_1.pickle','rb'))
