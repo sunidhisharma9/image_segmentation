@@ -33,9 +33,12 @@ class ClusterMaker:
             self.diss_matrix_1 = pickle.load(open('diss_matrix_1.pickle','rb'))
             self.diss_matrix_2 = pickle.load(open('diss_matrix_1.pickle','rb'))
 
+        self.diss = [self.diss_matrix_1, self.diss_matrix_2]
+        
         print 'Dissimilarity matrices calculated'
         self.n = np.shape(self.diss_matrix_1)[0]
         self.initialize_clustering()
+        print self.dist_to_cluster(0 , 0)
         
     def read_from_csv(self, filename):
         rd = pd.read_csv(filename, sep=",", header=2)
@@ -67,6 +70,16 @@ class ClusterMaker:
         for i in xrange(self.k):
             self.G[i] = np.array(all_indexes[i*q:(i+1)*q])
         
+
+    def dist_to_cluster(self, elem_index, cluster_index):
+        sum = 0
+        for p in xrange(self.p):
+            partial_sum = 0
+            for j in xrange(self.q):
+                cluster = self.G[cluster_index]
+                partial_sum += self.diss[p][elem_index, cluster[j]]
+            sum += self.Lambda[p][cluster_index]*partial_sum
+        return sum
 
     @staticmethod
     def cvt_np_array(matrix):
@@ -111,13 +124,7 @@ class ClusterMaker:
                 diss_matrix[i][j] = ClusterMaker.euclid_dist(elem1, elem2)    
 
         return diss_matrix
-
-##
-##def dist_to_cluster(elem_index, cluster_index, Lambda, G, q):
-##    sum = 0
-##    for j in xrange(q):
-##        sum +=
     
 #Begin
 
-cm = ClusterMaker('data/segmentation.test.txt', 7, 3)
+cm = ClusterMaker('data/segmentation.data.txt', 7, 3, read_files=True) 
