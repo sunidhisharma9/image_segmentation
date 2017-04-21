@@ -42,6 +42,11 @@ class ClusterMaker:
         
     def run_clustering(self):
         self.initialize_clustering()
+##        print 'cost 1', self.cost()
+##        self.update_U()
+##        print 'cost 2', self.cost()
+##        self.update_Lambda()
+##        print 'cost 3', self.cost()
     
     def read_from_csv(self, filename):
         rd = pd.read_csv(filename, sep=",", header=2)
@@ -106,6 +111,24 @@ class ClusterMaker:
                 
                 self.U[i][k] = pow(summ, -1)
 
+    def part_lambda_dist(self, view_index, cluster_index):
+        summ = 0
+        for i in xrange(self.n):
+            partial_sum = 0
+            for j in xrange(self.q):
+                cluster = self.G[cluster_index]
+                partial_sum += self.diss[view_index][i, cluster[j]]
+            summ += pow(self.U[i][cluster_index], self.m)*partial_sum
+        return summ
+    
+    def update_Lambda(self):
+        for i in xrange(self.p):
+            for k in xrange(self.k):
+                prod = 1
+                for j in xrange(self.p):
+                    prod *= self.part_lambda_dist(j, k)
+                prod = pow(prod, 1.0/float(self.p))
+                self.Lambda[i][k] = prod/self.part_lambda_dist(i, k)
     
     @staticmethod
     def cvt_np_array(matrix):
