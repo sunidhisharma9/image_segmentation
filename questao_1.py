@@ -39,6 +39,8 @@ class ClusterMaker:
         
         print 'Dissimilarity matrices calculated'
         self.n = np.shape(self.diss_matrix_1)[0]
+        
+    def run_clustering(self):
         self.initialize_clustering()
 
     def read_from_csv(self, filename):
@@ -136,3 +138,4 @@ class ClusterMaker:
 #Begin
 
 cm = ClusterMaker('data/segmentation.data.txt', 7, 3, 1.6, 1, read_files=True) 
+cm.run_clustering()
