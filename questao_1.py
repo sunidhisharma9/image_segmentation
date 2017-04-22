@@ -178,6 +178,23 @@ class ClusterMaker:
             U[i] = 0*U[i]
             U[i][max_i] = 1
         return U
+
+    @staticmethod
+    def calculate_cont_matrix(U1, U2):
+        U1 = ClusterMaker.soft_to_hard_cluster(U1)
+        U2 = ClusterMaker.soft_to_hard_cluster(U2)
+        U1 = np.transpose(U1)
+        U2 = np.transpose(U2)
+        
+        k = np.shape(U1)[0]
+        
+        cont_matrix = np.zeros((k, k))
+        for i in xrange(k):
+            for j in xrange(k):
+                l1 = U1[i]
+                l2 = U2[j]
+                cob_matrix[i][j] = np.dot(l1, l2)
+        return cont_matrix
     
     @staticmethod
     def cvt_np_array(matrix):
@@ -225,5 +242,5 @@ class ClusterMaker:
     
 #Begin
 
-cm = ClusterMaker('data/segmentation.test.txt', 7, 3, 1.6, 1, 100, read_files=False) 
+cm = ClusterMaker('data/segmentation.test.txt', 7, 3, 1.6, 1, 100, read_files=False)
 cm.run_clustering()
