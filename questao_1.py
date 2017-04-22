@@ -193,7 +193,7 @@ class ClusterMaker:
             for j in xrange(k):
                 l1 = U1[i]
                 l2 = U2[j]
-                cob_matrix[i][j] = np.dot(l1, l2)
+                cont_matrix[i][j] = np.dot(l1, l2)
         return cont_matrix
     
     @staticmethod
@@ -239,7 +239,7 @@ class ClusterMaker:
                 diss_matrix[i][j] = ClusterMaker.euclid_dist(elem1, elem2)    
 
         return diss_matrix
-    
+
 #Begin
 
 cm = ClusterMaker('data/segmentation.test.txt', 7, 3, 1.6, 1, 100, read_files=False)
