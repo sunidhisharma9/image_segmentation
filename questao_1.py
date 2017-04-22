@@ -59,7 +59,8 @@ class ClusterMaker:
             print 'Updating Lambda'
             self.update_Lambda()
             if t > 0:
-                if cost - self.cost_evolution[-2] < self.epsilon:
+                print 'Cost evolution', self.cost_evolution[-2] - cost 
+                if self.cost_evolution[-2] - cost < self.epsilon:
                     print 'Cost is stationary'
                     break
             
