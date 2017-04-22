@@ -170,12 +170,14 @@ class ClusterMaker:
             self.G[k] = np.array([a[0] for a in all_index_dist[:self.q]])
             del all_index_dist[:self.q]
 
-    def soft_to_hard_cluster(self):
-        n_rows = np.shape(self.U)[0]
+    @staticmethod
+    def soft_to_hard_cluster(U):
+        n_rows = np.shape(U)[0]
         for i in xrange(n_rows):
-            max_i = np.argmax(self.U[i])
-            self.U[i] = 0*self.U[i]
-            self.U[i][max_i] = 1
+            max_i = np.argmax(U[i])
+            U[i] = 0*U[i]
+            U[i][max_i] = 1
+        return U
     
     @staticmethod
     def cvt_np_array(matrix):
