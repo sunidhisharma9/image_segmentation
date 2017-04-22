@@ -4,6 +4,10 @@ import pandas as pd
 import numpy as np
 import math as m
 import pickle
+import warnings
+
+#ignore warnings
+warnings.filterwarnings('ignore')
 
 class ClusterMaker:
 
