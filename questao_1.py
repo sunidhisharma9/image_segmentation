@@ -19,7 +19,7 @@ class ClusterMaker:
         self.m = m
         self.s = s
         self.max_iter = max_iter
-        self.epslon = 0.01
+        self.epsilon = 0.01
         self.cost_evolution = []
         if read_files:
             print 'Reading input file'
