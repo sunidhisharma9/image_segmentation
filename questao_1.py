@@ -195,6 +195,24 @@ class ClusterMaker:
                 l2 = U2[j]
                 cont_matrix[i][j] = np.dot(l1, l2)
         return cont_matrix
+
+    @staticmethod
+    def comb2(n):
+        return n*(n-1)/2
+
+    @staticmethod
+    def adjusted_rand_index(U1, U2, n):
+        cont_matrix = ClusterMaker.calculate_cont_matrix(U1, U2)
+        a = np.sum(cont_matrix, axis=1)
+        b = np.sum(cont_matrix, axis=0)
+        sum_combs_a = np.sum([ClusterMaker.comb2(i) for i in a])
+        sum_combs_b = np.sum([ClusterMaker.comb2(i) for i in b])
+        sum_comb2_cont = np.sum(ClusterMaker.comb2(cont_matrix))
+        comb_n = ClusterMaker.comb2(n)
+        
+        rand_ind = (sum_comb2_cont - (sum_combs_a*sum_combs_b/comb_n))
+        rand_ind /= (0.5*(sum_combs_a + sum_combs_b)- (sum_combs_a*sum_combs_b/comb_n))
+        return rand_ind
     
     @staticmethod
     def cvt_np_array(matrix):
