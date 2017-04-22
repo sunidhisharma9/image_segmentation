@@ -12,13 +12,15 @@ class ClusterMaker:
     #k is the number of clusters
     #p is the number of views
     #q is the number of elements of a cluster prototype
-    def __init__(self, filename, k, q, m, s, read_files=False):
+    def __init__(self, filename, k, q, m, s, max_iter, read_files=False):
         self.k = k
         self.q = q
         self.p = 2
         self.m = m
         self.s = s
-        
+        self.max_iter = max_iter
+        self.epslon = 0.01
+        self.cost_evolution = []
         if read_files:
             print 'Reading input file'
             self.read_from_csv(filename)
@@ -42,7 +44,25 @@ class ClusterMaker:
         
     def run_clustering(self):
         self.initialize_clustering()
-    
+        self.cost_evolution = []
+        
+        for t in xrange(self.max_iter):
+            print 'Iteration', t
+            print 'Updating U'
+            self.update_U()
+            print 'Calculating new cost'
+            cost = self.cost()
+            self.cost_evolution.append(cost)
+            print 'Cost', cost
+            print 'Updating G'
+            self.update_G()
+            print 'Updating Lambda'
+            self.update_Lambda()
+            if t > 0:
+                if cost - self.cost_evolution[-2] < self.epsilon:
+                    print 'Cost is stationary'
+                    break
+            
     def read_from_csv(self, filename):
         rd = pd.read_csv(filename, sep=",", header=2)
         rd = rd.values #Numpy array
@@ -191,5 +211,5 @@ class ClusterMaker:
     
 #Begin
 
-cm = ClusterMaker('data/segmentation.data.txt', 7, 3, 1.6, 1, read_files=True) 
+cm = ClusterMaker('data/segmentation.test.txt', 7, 3, 1.6, 1, 100, read_files=False) 
 cm.run_clustering()
