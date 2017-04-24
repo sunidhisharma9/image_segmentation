@@ -29,6 +29,7 @@ class BayesClassifier:
     def run_test(self):
         self.read_from_csv()
         self.get_classes()
+        self.get_w_frequenz()
 
     @staticmethod
     def print_data_overview(raw_data):
@@ -84,27 +85,81 @@ class BayesClassifier:
                 w_grass.append(row)
                 print mensagem, w[6]
 
+#        if self.gets_w_classes(w[0].lower()+'.pickle') is False:
         self.persist(w_brickface, w[0].lower() + '.pickle')
+#        if self.gets_w_classes(w[2].lower() + '.pickle') is False:
         self.persist(w_sky, w[1].lower() + '.pickle')
+#        if self.gets_w_classes(w[2].lower() + '.pickle') is False:
         self.persist(w_cement, w[2].lower() + '.pickle')
+#        if self.gets_w_classes(w[3].lower() + '.pickle') is False:
         self.persist(w_brickface, w[3].lower() + '.pickle')
+#        if self.gets_w_classes(w[4].lower() + '.pickle') is False:
         self.persist(w_window, w[4].lower() + '.pickle')
+#        if self.gets_w_classes(w[5].lower() + '.pickle') is False:
         self.persist(w_path, w[5].lower() + '.pickle')
+#       if self.gets_w_classes(w[6].lower() + '.pickle') is False:
         self.persist(w_grass, w[6].lower() + '.pickle')
-        self.persist(df,str(w.__class__)+'.pickle')
+#        if self.gets_w_classes('w_set.pickle') is False:
+        self.persist(df, 'w_set.pickle')
 
     def persist(self, to_persist, file_name):
         file = open(file_name,'wb')
         pickle.dump(to_persist,file)
         file.close()
 
+    #checks if the named file exists
     def gets_w_classes(self,file_w_class_name):
-        file = open(file_w_class_name,'r')
-        if file != None:
+        file = open(file_w_class_name,'wb')
+        if file is not None:
             return True
         else:
             return False
 
+    def get_w_frequenz(self):
+        w = self.classes
+        df = self.data_frame
+        w_frequenz = None
+        num_elems = np.shape(df)[0]
+        qtd_w_brickface = 0
+        qtd_w_sky = 0
+        qtd_w_foliage = 0
+        qtd_w_cement = 0
+        qtd_w_window = 0
+        qtd_w_path = 0
+        qtd_w_grass = 0
+
+        for index, row in df.iterrows():
+            if str(index).__eq__(w[0]):
+                qtd_w_brickface += 1
+            if str(index).__eq__(w[1]):
+                qtd_w_sky += 1
+            if str(index).__eq__ (w[2]):
+                qtd_w_foliage += 1
+            if str(index).__eq__(w[3]):
+                qtd_w_cement += 1
+            if str(index).__eq__(w[4]):
+                qtd_w_window += 1
+            if str(index).__eq__(w[5]):
+                qtd_w_path += 1
+            if str(index).__eq__(w[6]):
+                qtd_w_grass += 1
+
+        #w_frequenz = [w,qtd_w_brickface, qtd_w_sky, qtd_w_foliage, qtd_w_cement, qtd_w_window, qtd_w_path, qtd_w_grass]
+        w_frequenz = np.array([
+            [w[0], qtd_w_brickface, self.divide_probability(qtd_w_brickface,num_elems)],
+             [w[1], qtd_w_sky, self.divide_probability(qtd_w_sky,num_elems)],
+             [w[2], qtd_w_foliage, self.divide_probability(qtd_w_foliage,num_elems)],
+             [w[3], qtd_w_cement, self.divide_probability(qtd_w_cement,num_elems)],
+             [w[4], qtd_w_window, self.divide_probability(qtd_w_window,num_elems)],
+             [w[5], qtd_w_path, self.divide_probability(qtd_w_path,num_elems)],
+             [w[6], qtd_w_grass, self.divide_probability(qtd_w_grass,num_elems)]])
+        self.persist(w_frequenz,'w_frequenz.pickle')
+        print w_frequenz
+
+    def divide_probability(self,value_a, value_b):
+        result = round(float(value_a/float(value_b)), 2)
+        return  result
     # Begin
 bc = BayesClassifier(True)
 bc.run_test()
+
