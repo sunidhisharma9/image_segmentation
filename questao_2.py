@@ -1,4 +1,5 @@
 # By Felipe {fnba}, Paulo {pan2} e Debora {dca2}@cin.ufpe.br
+from pandas import index
 
 import pandas as pd
 import numpy as np
@@ -28,8 +29,11 @@ class BayesClassifier:
 
     def run_test(self):
         self.read_from_csv()
-        self.get_classes()
-        self.get_w_frequenz()
+        #self.get_classes()
+        #self.get_w_frequenz()
+        #self.separarViews()
+        #self.read_from_csv_with_headers()
+        self.create_views()
 
     @staticmethod
     def print_data_overview(raw_data):
@@ -47,8 +51,11 @@ class BayesClassifier:
         return matrix
 
     def read_from_csv_with_headers(self):
-        with open("data/segmentation.test.txt") as csvfile:
-            reader = csv.DictReader(csvfile,)
+        with open("data/segmentation.test.txt") as csv_file:
+            reader = csv.reader(csv_file)
+            for row in reader:
+                print row
+
 
     def get_classes(self):
         mensagem = 'Coletando classe: '
@@ -144,7 +151,6 @@ class BayesClassifier:
             if str(index).__eq__(w[6]):
                 qtd_w_grass += 1
 
-        #w_frequenz = [w,qtd_w_brickface, qtd_w_sky, qtd_w_foliage, qtd_w_cement, qtd_w_window, qtd_w_path, qtd_w_grass]
         w_frequenz = np.array([
             [w[0], qtd_w_brickface, self.divide_probability(qtd_w_brickface,num_elems)],
              [w[1], qtd_w_sky, self.divide_probability(qtd_w_sky,num_elems)],
@@ -153,13 +159,35 @@ class BayesClassifier:
              [w[4], qtd_w_window, self.divide_probability(qtd_w_window,num_elems)],
              [w[5], qtd_w_path, self.divide_probability(qtd_w_path,num_elems)],
              [w[6], qtd_w_grass, self.divide_probability(qtd_w_grass,num_elems)]])
-        self.persist(w_frequenz,'w_frequenz.pickle')
+        self.persist(w_frequenz,'w_frequence.pickle')
         print w_frequenz
 
     def divide_probability(self,value_a, value_b):
         result = round(float(value_a/float(value_b)), 2)
-        return  result
-    # Begin
+        return result
+
+    def separarViews(self):
+        size_view_1 = 9
+        size_view_2 = 10
+        columns = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        file = None
+        #with open("data/segmentation.test.txt","rb") as csv_with_headers:
+        file = pd.read_csv("data/segmentation.test.txt","rb",header=2) #csv.reader(csv_with_headers)
+         #  for index, line in enumerate(reader):
+        print file
+
+    def create_views(self):
+        shape_columns=["REGION-CENTROID-COL", "REGION-CENTROID-ROW", "REGION-PIXEL-COUNT", "SHORT-LINE-DENSITY-5", "SHORT-LINE-DENSITY-2", "VEDGE-MEAN", "VEDGE-SD", "HEDGE-MEAN", "HEDGE-SD", "INTENSITY-MEAN"]
+        RGP_columns=["RAWRED-MEAN", "RAWBLUE-MEAN", "RAWGREEN-MEAN", "EXRED-MEAN", "EXBLUE-MEAN", "EXGREEN-MEAN", "VALUE-MEAN", "SATURATION-MEAN","HUE-MEAN"]
+        #pd.DataFrame(shape_view, index=None, columns=shape_view) #
+        size_view_1 = 9
+        size_view_2 = 10
+        num_rows = np.shape(self.raw_data)[0]
+        shape_view = self.raw_data[np.ix_(range(num_rows), range(size_view_1))]
+        RGB_view = self.raw_data[np.ix_(range(num_rows), range(size_view_1, size_view_2))]
+        self.persist(shape_view, "shape_view.pickle")
+        self.persist(RGB_view, "RGB_view.pickle")
+
+#Begin
 bc = BayesClassifier(True)
 bc.run_test()
-
