@@ -203,6 +203,7 @@ class BayesClassifier:
         # get path_pickled file
         df_path = self.get_from_pickle_pandas("path.pickle")
         np_path_array = self.pickled_dataframe_to_numpy_array(df_path)
+        w_path_max = self.process_max(np_path_array)
 
         # get brickface pickled file)
         df_brickface = self.get_from_pickle_pandas("brickface.pickle")
@@ -235,19 +236,16 @@ class BayesClassifier:
         i = 0  # linha
         j = 0  # coluna
         max = 0
-        length = np.shape(np_array)
-        num_of_columns = np.shape(np_array)[1]
+        old_value = 0
         num_of_rows = np.shape(np_array)[0]
         np_array = np_array.values
 
-        while i < num_of_columns - 1:
-            while j < num_of_rows - 1:
-                print 'comparing values...'
-                if max < np_array[i][j]:
-                    max = np_array[i][j]
-
-        print 'maximo np', np.max(np_array)
-        print 'maximo loop', max
+        while i < num_of_rows:
+            old_value = max
+            if max < np.amax(np_array[i]):
+                max = np.amax(np_array[i])
+                print 'New maximal value found', 'old value: ', old_value, 'new value', max
+            i = i + 1
         return max
 
 
