@@ -33,7 +33,8 @@ class BayesClassifier:
         #self.get_w_frequenz()
         #self.separarViews()
         #self.read_from_csv_with_headers()
-        self.create_views()
+        #self.create_views()
+        self.get_max_verossimilhanca()
 
     @staticmethod
     def print_data_overview(raw_data):
@@ -178,15 +179,45 @@ class BayesClassifier:
 
     def create_views(self):
         shape_columns=["REGION-CENTROID-COL", "REGION-CENTROID-ROW", "REGION-PIXEL-COUNT", "SHORT-LINE-DENSITY-5", "SHORT-LINE-DENSITY-2", "VEDGE-MEAN", "VEDGE-SD", "HEDGE-MEAN", "HEDGE-SD", "INTENSITY-MEAN"]
-        RGP_columns=["RAWRED-MEAN", "RAWBLUE-MEAN", "RAWGREEN-MEAN", "EXRED-MEAN", "EXBLUE-MEAN", "EXGREEN-MEAN", "VALUE-MEAN", "SATURATION-MEAN","HUE-MEAN"]
-        #pd.DataFrame(shape_view, index=None, columns=shape_view) #
-        size_view_1 = 9
-        size_view_2 = 10
-        num_rows = np.shape(self.raw_data)[0]
-        shape_view = self.raw_data[np.ix_(range(num_rows), range(size_view_1))]
-        RGB_view = self.raw_data[np.ix_(range(num_rows), range(size_view_1, size_view_2))]
+        rgb_columns=["RAWRED-MEAN", "RAWBLUE-MEAN", "RAWGREEN-MEAN", "EXRED-MEAN", "EXBLUE-MEAN", "EXGREEN-MEAN", "VALUE-MEAN", "SATURATION-MEAN","HUE-MEAN"]
+        df = self.data_frame
+        shape_view = df[shape_columns].copy()
         self.persist(shape_view, "shape_view.pickle")
-        self.persist(RGB_view, "RGB_view.pickle")
+        rgb_view = df[rgb_columns].copy()
+        self.persist(rgb_view,"rgb_view.pickle")
+
+    def get_max_verossimilhanca(self):
+        w_grass_max = None
+        df = self.get_from_pickle_pandas("grass.pickle")
+        np_array = self.pickled_dataframe_to_numpy_array(df)
+        length=np.shape(np_array)
+        num_of_columns = np.shape(np_array)[1]
+        print num_of_columns
+        num_of_rows = np.shape(np_array)[0]
+        print num_of_rows
+        np_array = np_array.values
+        max = 0
+        i = 0 #linha
+        j = 0 #coluna
+        while i < num_of_columns-1:
+            while j < num_of_rows-1:
+                if max < np_array[i][j]:
+                    max = np_array[i][j]
+
+        print 'maximo np', np.max(np_array)
+        print 'maximo loop', max
+
+
+    def pickled_dataframe_to_numpy_array(self, data_frame):
+        new_np_array = pd.DataFrame(data_frame)
+        return new_np_array
+
+    @staticmethod
+    def get_from_pickle_pandas(file_name):
+        df = pd.read_pickle(file_name)
+        return df
+
+
 
 #Begin
 bc = BayesClassifier(True)
