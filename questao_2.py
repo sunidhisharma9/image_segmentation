@@ -187,25 +187,68 @@ class BayesClassifier:
         self.persist(rgb_view,"rgb_view.pickle")
 
     def get_max_verossimilhanca(self):
-        w_grass_max = None
-        df = self.get_from_pickle_pandas("grass.pickle")
-        np_array = self.pickled_dataframe_to_numpy_array(df)
-        length=np.shape(np_array)
-        num_of_columns = np.shape(np_array)[1]
-        print num_of_columns
-        num_of_rows = np.shape(np_array)[0]
-        print num_of_rows
-        np_array = np_array.values
+        w_grass_max = 0
+        w_path_max = 0
+        w_brickface_max = 0
+        w_sky_max = 0
+        w_window_max = 0
+        w_foliage_max = 0
+        w_cement_max = 0
+
+        #get grass pickled file
+        df_grass = self.get_from_pickle_pandas("grass.pickle")
+        np_grass_array = self.pickled_dataframe_to_numpy_array(df_grass)
+        w_grass_max = self.process_max(np_grass_array)
+
+        # get path_pickled file
+        df_path = self.get_from_pickle_pandas("path.pickle")
+        np_path_array = self.pickled_dataframe_to_numpy_array(df_path)
+
+        # get brickface pickled file)
+        df_brickface = self.get_from_pickle_pandas("brickface.pickle")
+        np_brickface_array = self.pickled_dataframe_to_numpy_array(df_brickface)
+        w_brickface_max = self.process_max(np_brickface_array)
+
+        #get sky pickled file
+        df_sky = self.get_from_pickle_pandas("sky.pickle")
+        np_sky_array = self.pickled_dataframe_to_numpy_array(df_sky)
+        w_sky_max = self.process_max(np_sky_array)
+
+        # get window pickled file
+        df_window = self.get_from_pickle_pandas("window.pickle")
+        np_window_array = self.pickled_dataframe_to_numpy_array(df_window)
+        w_window_max = self.process_max(np_window_array)
+
+        # get foliage pickled file
+        df_foliage = self.get_from_pickle_pandas("foliage.pickle")
+        np_foliage_array = self.pickled_dataframe_to_numpy_array(df_foliage)
+        w_window_max = self.process_max(np_foliage_array)
+
+        # get cement pickled file
+        df_cement = self.get_from_pickle_pandas("cement.pickle")
+        np_cement_array = self.pickled_dataframe_to_numpy_array(df_cement)
+        w_cement_max = self.process_max(np_cement_array)
+
+
+
+    def process_max(self, np_array):
+        i = 0  # linha
+        j = 0  # coluna
         max = 0
-        i = 0 #linha
-        j = 0 #coluna
-        while i < num_of_columns-1:
-            while j < num_of_rows-1:
+        length = np.shape(np_array)
+        num_of_columns = np.shape(np_array)[1]
+        num_of_rows = np.shape(np_array)[0]
+        np_array = np_array.values
+
+        while i < num_of_columns - 1:
+            while j < num_of_rows - 1:
+                print 'comparing values...'
                 if max < np_array[i][j]:
                     max = np_array[i][j]
 
         print 'maximo np', np.max(np_array)
         print 'maximo loop', max
+        return max
 
 
     def pickled_dataframe_to_numpy_array(self, data_frame):
