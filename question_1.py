@@ -6,6 +6,8 @@ import math as m
 import pickle
 import warnings
 
+from copy import deepcopy
+
 #ignore warnings
 warnings.filterwarnings('ignore')
 
@@ -300,8 +302,36 @@ class ClusterMaker:
 #Begin
 
 
-cm = ClusterMaker('data/segmentation.test.txt', 7, 3, 1.6, 1, 100, read_files=True)
-cm.run_clustering()
-#Compute rand index
+cm = ClusterMaker('data/segmentation.test.txt', 7, 3, 1.6, 1, 100, read_files=False)
+best_cost = 10000000000000
+best_cm = []
+all_rands = []
+all_costs = []
+
 other_U = pickle.load(open('apriori_U.pickle', 'rb'))
-print 'Rand', cm.adjusted_rand_index(other_U)
+
+for i in xrange(100):
+    cm.run_clustering()
+    #Compute rand index
+    new_rand = cm.adjusted_rand_index(other_U)
+    print 'Rand',i, new_rand
+    all_rands.append(new_rand)
+    new_cost = cm.cost_evolution[-1]
+    all_costs.append(new_cost)
+    if new_cost < best_cost:
+        best_cost = new_cost
+        best_cm = deepcopy(cm)
+        print 'Best so far Cost:', best_cost,'Rand:', new_rand
+        
+print 'Auto saving best data'
+out_cm = open('best_cm.pickle', 'wb')
+out_costs = open('all_costs.pickle', 'wb')
+out_rands = open('all_rands.pickle', 'wb')
+
+pickle.dump(best_cm, out_cm)
+pickle.dump(all_costs, out_costs)
+pickle.dump(all_rands, out_rands)
+
+out_cm.close()
+out_costs.close()
+out_rands.close()
