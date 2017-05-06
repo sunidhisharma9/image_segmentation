@@ -53,7 +53,7 @@ class ClusterMaker:
         else:
             print 'Loading previous matrices'
             self.diss_matrix_1 = pickle.load(open('diss_matrix_1.pickle','rb'))
-            self.diss_matrix_2 = pickle.load(open('diss_matrix_1.pickle','rb'))
+            self.diss_matrix_2 = pickle.load(open('diss_matrix_2.pickle','rb'))
 
         self.diss = [self.diss_matrix_1, self.diss_matrix_2]
         
