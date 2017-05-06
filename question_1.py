@@ -305,6 +305,7 @@ class ClusterMaker:
 cm = ClusterMaker('data/segmentation.test.txt', 7, 3, 1.6, 1, 100, read_files=False)
 best_cost = 10000000000000
 best_cm = []
+rand_for_best = 0
 all_rands = []
 all_costs = []
 
@@ -321,7 +322,8 @@ for i in xrange(100):
     if new_cost < best_cost:
         best_cost = new_cost
         best_cm = deepcopy(cm)
-        print 'Best so far Cost:', best_cost,'Rand:', new_rand
+        rand_for_best = new_rand
+    print 'Best so far Cost:', best_cost,'Rand:', rand_for_best
         
 print 'Auto saving best data'
 out_cm = open('best_cm.pickle', 'wb')
