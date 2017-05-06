@@ -3,7 +3,7 @@ import pickle
 
 fd = open('data/segmentation.test.txt', 'rb')
 content = fd.readlines()
-content = content[6:] #ignore the first 5 lines
+content = content[5:] #ignore the first 5 lines
 
 def custon_set(array):
     ret_set = []
