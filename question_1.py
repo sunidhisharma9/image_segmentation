@@ -312,6 +312,7 @@ all_costs = []
 other_U = pickle.load(open('apriori_U.pickle', 'rb'))
 
 for i in xrange(100):
+    print 'Running clustering for the ', i+1, 'time -----------------------'
     cm.run_clustering()
     #Compute rand index
     new_rand = cm.adjusted_rand_index(other_U)
