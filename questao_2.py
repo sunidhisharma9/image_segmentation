@@ -52,7 +52,7 @@ class BayesClassifier:
         print 'Calculate the probabilities distributions by the max likelihood method'
         self.calculate_prob_diss_classes()
         print 'Our classifier'
-        self.evaluate()
+        print 'Accuracy', self.evaluate()
     def read_from_csv(self):
         rd = pd.read_csv("data/segmentation.test.txt", sep=",", header=2)
         self.data_frame = rd
@@ -178,10 +178,7 @@ class BayesClassifier:
                 num_wrong += 1.0
             num_total += 1.0
 
-        print 'Accuracy', num_right/num_total
-    def divide_probability(self,value_a, value_b):
-        result = round(float(value_a/float(value_b)), 2)
-        return result
+        print num_right/num_total
 
     def create_views(self):
         shape_columns=["REGION-CENTROID-COL", "REGION-CENTROID-ROW", "REGION-PIXEL-COUNT", "SHORT-LINE-DENSITY-5", "SHORT-LINE-DENSITY-2", "VEDGE-MEAN", "VEDGE-SD", "HEDGE-MEAN", "HEDGE-SD", "INTENSITY-MEAN"]
@@ -194,70 +191,6 @@ class BayesClassifier:
         self.persist(rgb_view,"rgb_view.pickle")
         self.rgb_view = rgb_view
 
-    def get_max_verossimilhanca(self):
-        df = self.data_frame
-        w_grass_max = 0
-        w_path_max = 0
-        w_brickface_max = 0
-        w_sky_max = 0
-        w_window_max = 0
-        w_foliage_max = 0
-        w_cement_max = 0
-
-        #get grass pickled file
-        df_grass = self.get_from_pickle_pandas("grass.pickle")
-        np_grass_array = self.pickled_dataframe_to_numpy_array(df_grass)
-        w_grass_max = self.process_max(np_grass_array)
-
-        # get path_pickled file
-        df_path = self.get_from_pickle_pandas("path.pickle")
-        np_path_array = self.pickled_dataframe_to_numpy_array(df_path)
-        w_path_max = self.process_max(np_path_array)
-
-        # get brickface pickled file)
-        df_brickface = self.get_from_pickle_pandas("brickface.pickle")
-        np_brickface_array = self.pickled_dataframe_to_numpy_array(df_brickface)
-        w_brickface_max = self.process_max(np_brickface_array)
-
-        #get sky pickled file
-        df_sky = self.get_from_pickle_pandas("sky.pickle")
-        np_sky_array = self.pickled_dataframe_to_numpy_array(df_sky)
-        w_sky_max = self.process_max(np_sky_array)
-
-        # get window pickled file
-        df_window = self.get_from_pickle_pandas("window.pickle")
-        np_window_array = self.pickled_dataframe_to_numpy_array(df_window)
-        w_window_max = self.process_max(np_window_array)
-
-        # get foliage pickled file
-        df_foliage = self.get_from_pickle_pandas("foliage.pickle")
-        np_foliage_array = self.pickled_dataframe_to_numpy_array(df_foliage)
-        w_window_max = self.process_max(np_foliage_array)
-
-        # get cement pickled file
-        df_cement = self.get_from_pickle_pandas("cement.pickle")
-        np_cement_array = self.pickled_dataframe_to_numpy_array(df_cement)
-        w_cement_max = self.process_max(np_cement_array)
-
-
-
-    def process_max(self, np_array):
-        i = 0  # linha
-        j = 0  # coluna
-        max = 0
-        old_value = 0
-        num_of_rows = np.shape(np_array)[0]
-        np_array = np_array.values
-
-        while i < num_of_rows:
-            old_value = max
-            if max < np.amax(np_array[i]):
-                max = np.amax(np_array[i])
-                print 'New maximal value found', 'old value: ', old_value, 'new value', max
-            i = i + 1
-        return max
-
-
     def pickled_dataframe_to_numpy_array(self, data_frame):
         new_np_array = pd.DataFrame(data_frame)
         return new_np_array
@@ -266,26 +199,6 @@ class BayesClassifier:
     def get_from_pickle_pandas(file_name):
         df = pd.read_pickle(file_name)
         return df
-
-    def bayes(self):
-        df_frequenz = self.get_from_pickle_pandas('w_frequenz.pickle')
-        class_name = None
-        w_collection = None
-        E = 0
-        Pwj=0
-        for w in self.classes:
-            w_collection = self.get_from_pickle_pandas(class_name)
-            w_np_array = self.pickled_dataframe_to_numpy_array(w_collection)
-            E = np.sum(w_collection)
-            i=0
-           # for j in w_collection:
-           #     E +=w_collection[j]
-        #x = np.shape(self.raw_data)[1] #0,14
-        #w = df_frequenz[0][1] #300
-
-        # somatorio
-        #p_x_w = None
-        max_w = None
 
     def get_classes_dinamicamente(self):
         colecao = self.data
