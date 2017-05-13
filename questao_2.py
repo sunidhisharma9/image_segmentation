@@ -120,6 +120,7 @@ class BayesClassifier:
         num_elems = np.shape(data_frame)[0]
         element_size = np.shape(data_frame)[1]
         self.centers = np.zeros((num_classes, element_size))
+        self.num_for_class = np.zeros((num_classes, 1))
         self.diags = np.zeros((num_classes, element_size))
 
         #Compute centers
@@ -127,8 +128,8 @@ class BayesClassifier:
             current_class = str(index)
             current_index = my_classes.index(current_class)
             self.centers[current_index] += row.values
-
-        self.centers /= num_elems
+            self.num_for_class[current_index] += 1
+        self.centers /= self.num_for_class
 
         #Compute variance matrix diagonals
         for index, row in data_frame.iterrows():
@@ -137,7 +138,7 @@ class BayesClassifier:
             current_center = self.centers[current_index]
             self.diags[current_index] += pow(row.values - current_center, 2)
 
-        self.diags /= num_elems
+        self.diags /= self.num_for_class
 
 
     def p_x_w(self, x, index):
