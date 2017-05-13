@@ -123,6 +123,17 @@ class BayesClassifier:
 
         self.diags /= num_elems
 
+
+    def p_x_w(self, x, index):
+        d = len(x)
+        center = self.centers[index]
+        variance_diag = self.diags[index]
+        prod = np.prod(variance_diag)
+        diff_2 = pow(x - center,2)
+        diff_2_div = diff_2/variance_diag
+        internal_sum = np.sum(diff_2_div)
+        return pow(2*np.pi, -0.5*d)*pow(prod, -0.5)*np.exp((-0.5)*internal_sum)
+
     def divide_probability(self,value_a, value_b):
         result = round(float(value_a/float(value_b)), 2)
         return result
