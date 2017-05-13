@@ -95,6 +95,33 @@ class BayesClassifier:
 
         print 'A priori probabilities', self.apriori
 
+    def calculate_prob_diss_classes(self):
+        my_classes = self.classes
+        data_frame = self.data
+        num_classes = len(my_classes)
+        num_elems = np.shape(data_frame)[0]
+        element_size = np.shape(data_frame)[1]
+        self.centers = np.zeros((num_classes, element_size))
+        diags = np.zeros((num_classes, element_size))
+
+        #Compute centers
+        for index, row in data_frame.iterrows():
+            current_class = str(index)
+            current_index = my_classes.index(current_class)
+            self.centers[current_index] += row.values
+
+        self.centers /= num_elems
+
+        #Compute variance matrix diagonals
+        for index, row in data_frame.iterrows():
+            current_class = str(index)
+            current_index = my_classes.index(current_class)
+            current_center = self.centers[current_index]
+            diags[current_index] += pow(row.values - current_center, 2)
+
+        diags /= num_elems
+        self.variance_matrices = [np.diag(d) for d in diags]
+
     def divide_probability(self,value_a, value_b):
         result = round(float(value_a/float(value_b)), 2)
         return result
