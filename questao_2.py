@@ -14,11 +14,11 @@ warnings.filterwarnings('ignore')
 class BayesClassifier:
     def __init__(self, read_files=False):
         self.read_files = read_files
-        self.classes = ['BRICKFACE', 'SKY', 'FOLIAGE', 'CEMENT', 'WINDOW', 'PATH', 'GRASS']
 
         if read_files:
             print ("Reading input file")
             self.read_from_csv()
+            self.classes = self.get_classes_dinamicamente()
             self.print_data_overview(self.raw_data)
 
     def read_from_csv(self):
@@ -29,12 +29,16 @@ class BayesClassifier:
 
     def run_test(self):
         self.read_from_csv()
+        self.get_w_frequenz()
         #self.get_classes()
         #self.get_w_frequenz()
         #self.separarViews()
         #self.read_from_csv_with_headers()
         #self.create_views()
-        self.get_max_verossimilhanca()
+        #self.get_max_verossimilhanca()
+        #self.bayes()
+        #self.separarViews()
+        #self.teste_get_classes_dinamicamente()
 
     @staticmethod
     def print_data_overview(raw_data):
@@ -58,58 +62,6 @@ class BayesClassifier:
                 print row
 
 
-    def get_classes(self):
-        mensagem = 'Coletando classe: '
-        w=self.classes
-        w_brickface = []
-        w_sky = []
-        w_foliage = []
-        w_cement = []
-        w_window = []
-        w_path = []
-        w_grass = []
-        df = self.data_frame
-
-        for index, row in df.iterrows():
-            if str(index).__eq__(w[0]):
-                w_brickface.append(row)
-                print mensagem, w[0]
-            if str(index).__eq__(w[1]):
-                w_sky.append(row)
-                print mensagem, w[1]
-            if str(index).__eq__ (w[2]):
-                w_foliage.append(row)
-                print mensagem, w[2]
-            if str(index).__eq__(w[3]):
-                w_cement.append(row)
-                print mensagem, w[3]
-            if str(index).__eq__(w[4]):
-                w_window.append(row)
-                print mensagem, w[4]
-            if str(index).__eq__(w[5]):
-                w_path.append(row)
-                print mensagem, w[5]
-            if str(index).__eq__(w[6]):
-                w_grass.append(row)
-                print mensagem, w[6]
-
-#        if self.gets_w_classes(w[0].lower()+'.pickle') is False:
-        self.persist(w_brickface, w[0].lower() + '.pickle')
-#        if self.gets_w_classes(w[2].lower() + '.pickle') is False:
-        self.persist(w_sky, w[1].lower() + '.pickle')
-#        if self.gets_w_classes(w[2].lower() + '.pickle') is False:
-        self.persist(w_cement, w[2].lower() + '.pickle')
-#        if self.gets_w_classes(w[3].lower() + '.pickle') is False:
-        self.persist(w_brickface, w[3].lower() + '.pickle')
-#        if self.gets_w_classes(w[4].lower() + '.pickle') is False:
-        self.persist(w_window, w[4].lower() + '.pickle')
-#        if self.gets_w_classes(w[5].lower() + '.pickle') is False:
-        self.persist(w_path, w[5].lower() + '.pickle')
-#       if self.gets_w_classes(w[6].lower() + '.pickle') is False:
-        self.persist(w_grass, w[6].lower() + '.pickle')
-#        if self.gets_w_classes('w_set.pickle') is False:
-        self.persist(df, 'w_set.pickle')
-
     def persist(self, to_persist, file_name):
         file = open(file_name,'wb')
         pickle.dump(to_persist,file)
@@ -125,9 +77,10 @@ class BayesClassifier:
 
     def get_w_frequenz(self):
         w = self.classes
-        df = self.data_frame
+        df = self.get_from_pickle_pandas('rgb_view.pickle') #self.data_frame
         w_frequenz = None
         num_elems = np.shape(df)[0]
+
         qtd_w_brickface = 0
         qtd_w_sky = 0
         qtd_w_foliage = 0
@@ -138,28 +91,28 @@ class BayesClassifier:
 
         for index, row in df.iterrows():
             if str(index).__eq__(w[0]):
-                qtd_w_brickface += 1
+                qtd_w_grass  += 1
             if str(index).__eq__(w[1]):
-                qtd_w_sky += 1
+                qtd_w_path += 1
             if str(index).__eq__ (w[2]):
-                qtd_w_foliage += 1
+                qtd_w_window += 1
             if str(index).__eq__(w[3]):
                 qtd_w_cement += 1
             if str(index).__eq__(w[4]):
-                qtd_w_window += 1
+                qtd_w_foliage += 1
             if str(index).__eq__(w[5]):
-                qtd_w_path += 1
+                qtd_w_sky += 1
             if str(index).__eq__(w[6]):
-                qtd_w_grass += 1
+                qtd_w_brickface += 1
 
         w_frequenz = np.array([
-            [w[0], qtd_w_brickface, self.divide_probability(qtd_w_brickface,num_elems)],
-             [w[1], qtd_w_sky, self.divide_probability(qtd_w_sky,num_elems)],
-             [w[2], qtd_w_foliage, self.divide_probability(qtd_w_foliage,num_elems)],
+            [w[0], qtd_w_grass, self.divide_probability(qtd_w_grass,num_elems)],
+             [w[1], qtd_w_path, self.divide_probability(qtd_w_path,num_elems)],
+             [w[2], qtd_w_window, self.divide_probability(qtd_w_window,num_elems)],
              [w[3], qtd_w_cement, self.divide_probability(qtd_w_cement,num_elems)],
-             [w[4], qtd_w_window, self.divide_probability(qtd_w_window,num_elems)],
-             [w[5], qtd_w_path, self.divide_probability(qtd_w_path,num_elems)],
-             [w[6], qtd_w_grass, self.divide_probability(qtd_w_grass,num_elems)]])
+             [w[4], qtd_w_foliage, self.divide_probability(qtd_w_foliage,num_elems)],
+             [w[5], qtd_w_sky, self.divide_probability(qtd_w_sky,num_elems)],
+             [w[6], qtd_w_brickface, self.divide_probability(qtd_w_brickface,num_elems)]])
         self.persist(w_frequenz,'w_frequence.pickle')
         print w_frequenz
 
@@ -183,10 +136,13 @@ class BayesClassifier:
         df = self.data_frame
         shape_view = df[shape_columns].copy()
         self.persist(shape_view, "shape_view.pickle")
+        self.shape_view = shape_view
         rgb_view = df[rgb_columns].copy()
         self.persist(rgb_view,"rgb_view.pickle")
+        self.rgb_view = rgb_view
 
     def get_max_verossimilhanca(self):
+        df = self.data_frame
         w_grass_max = 0
         w_path_max = 0
         w_brickface_max = 0
@@ -257,6 +213,40 @@ class BayesClassifier:
     def get_from_pickle_pandas(file_name):
         df = pd.read_pickle(file_name)
         return df
+
+    def bayes(self):
+        df_frequenz = self.get_from_pickle_pandas('w_frequenz.pickle')
+        class_name = None
+        w_collection = None
+        E = 0
+        Pwj=0
+        for w in self.classes:
+            w_collection = self.get_from_pickle_pandas(class_name)
+            w_np_array = self.pickled_dataframe_to_numpy_array(w_collection)
+            E = np.sum(w_collection)
+            i=0
+           # for j in w_collection:
+           #     E +=w_collection[j]
+        #x = np.shape(self.raw_data)[1] #0,14
+        #w = df_frequenz[0][1] #300
+
+        # somatorio
+        #p_x_w = None
+        max_w = None
+
+    def get_classes_dinamicamente(self):
+        colecao = self.data_frame
+        classes=[]
+        class_name=""
+        index_number = 1
+        j = 0
+        for index, row in colecao.iterrows():
+            classes.append(index)
+        classes = pd.unique(classes)
+        print classes
+        return classes
+
+
 
 
 
