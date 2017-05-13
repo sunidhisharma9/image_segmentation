@@ -22,8 +22,10 @@ class BayesClassifier:
             self.print_data_overview(self.raw_data)
 
         if view_to_use == 1:
+            print 'Using the rgb view'
             self.data = self.get_from_pickle_pandas('rgb_view.pickle')
         else:
+            print 'Using the shape view'
             self.data = self.get_from_pickle_pandas('shape_view.pickle')
 
         self.classes = self.get_classes_dinamicamente()
@@ -77,59 +79,25 @@ class BayesClassifier:
             return False
 
     def get_w_frequenz(self):
-        w = self.classes
-        df = self.get_from_pickle_pandas('rgb_view.pickle') #self.data_frame
-        w_frequenz = None
-        num_elems = np.shape(df)[0]
+        my_classes = self.classes
+        data_frame = self.data
+        num_classes = len(my_classes)
+        num_elems = np.shape(data_frame)[0]
 
-        qtd_w_brickface = 0
-        qtd_w_sky = 0
-        qtd_w_foliage = 0
-        qtd_w_cement = 0
-        qtd_w_window = 0
-        qtd_w_path = 0
-        qtd_w_grass = 0
+        self.apriori = np.zeros((num_classes, 1))
 
-        for index, row in df.iterrows():
-            if str(index).__eq__(w[0]):
-                qtd_w_grass  += 1
-            if str(index).__eq__(w[1]):
-                qtd_w_path += 1
-            if str(index).__eq__ (w[2]):
-                qtd_w_window += 1
-            if str(index).__eq__(w[3]):
-                qtd_w_cement += 1
-            if str(index).__eq__(w[4]):
-                qtd_w_foliage += 1
-            if str(index).__eq__(w[5]):
-                qtd_w_sky += 1
-            if str(index).__eq__(w[6]):
-                qtd_w_brickface += 1
+        for index, row in data_frame.iterrows():
+            current_class = str(index)
+            current_index = my_classes.index(current_class)
+            self.apriori[current_index] += 1
 
-        w_frequenz = np.array([
-            [w[0], qtd_w_grass, self.divide_probability(qtd_w_grass,num_elems)],
-             [w[1], qtd_w_path, self.divide_probability(qtd_w_path,num_elems)],
-             [w[2], qtd_w_window, self.divide_probability(qtd_w_window,num_elems)],
-             [w[3], qtd_w_cement, self.divide_probability(qtd_w_cement,num_elems)],
-             [w[4], qtd_w_foliage, self.divide_probability(qtd_w_foliage,num_elems)],
-             [w[5], qtd_w_sky, self.divide_probability(qtd_w_sky,num_elems)],
-             [w[6], qtd_w_brickface, self.divide_probability(qtd_w_brickface,num_elems)]])
-        self.persist(w_frequenz,'w_frequence.pickle')
-        print w_frequenz
+        self.apriori /= num_elems
+
+        print 'A priori probabilities', self.apriori
 
     def divide_probability(self,value_a, value_b):
         result = round(float(value_a/float(value_b)), 2)
         return result
-
-    def separarViews(self):
-        size_view_1 = 9
-        size_view_2 = 10
-        columns = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-        file = None
-        #with open("data/segmentation.test.txt","rb") as csv_with_headers:
-        file = pd.read_csv("data/segmentation.test.txt","rb",header=2) #csv.reader(csv_with_headers)
-         #  for index, line in enumerate(reader):
-        print file
 
     def create_views(self):
         shape_columns=["REGION-CENTROID-COL", "REGION-CENTROID-ROW", "REGION-PIXEL-COUNT", "SHORT-LINE-DENSITY-5", "SHORT-LINE-DENSITY-2", "VEDGE-MEAN", "VEDGE-SD", "HEDGE-MEAN", "HEDGE-SD", "INTENSITY-MEAN"]
@@ -252,4 +220,4 @@ class BayesClassifier:
 
 
 #Begin
-bc = BayesClassifier(True)
+#bc = BayesClassifier(True)
