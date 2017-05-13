@@ -32,6 +32,8 @@ class BayesClassifier:
 
         print 'Getting a priori probabilities'
         self.get_w_frequenz()
+        print 'Calculate the probabilities distributions by the max likelihood method'
+        self.calculate_prob_diss_classes()
 
     def read_from_csv(self):
         rd = pd.read_csv("data/segmentation.test.txt", sep=",", header=2)
@@ -102,7 +104,7 @@ class BayesClassifier:
         num_elems = np.shape(data_frame)[0]
         element_size = np.shape(data_frame)[1]
         self.centers = np.zeros((num_classes, element_size))
-        diags = np.zeros((num_classes, element_size))
+        self.diags = np.zeros((num_classes, element_size))
 
         #Compute centers
         for index, row in data_frame.iterrows():
@@ -117,10 +119,9 @@ class BayesClassifier:
             current_class = str(index)
             current_index = my_classes.index(current_class)
             current_center = self.centers[current_index]
-            diags[current_index] += pow(row.values - current_center, 2)
+            self.diags[current_index] += pow(row.values - current_center, 2)
 
-        diags /= num_elems
-        self.variance_matrices = [np.diag(d) for d in diags]
+        self.diags /= num_elems
 
     def divide_probability(self,value_a, value_b):
         result = round(float(value_a/float(value_b)), 2)
