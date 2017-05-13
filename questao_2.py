@@ -21,6 +21,10 @@ class BayesClassifier:
             self.classes = self.get_classes_dinamicamente()
             self.print_data_overview(self.raw_data)
 
+            #get a priori probs
+            print 'Getting a priori probabilities'
+            self.get_w_frequenz()
+
     def read_from_csv(self):
         rd = pd.read_csv("data/segmentation.test.txt", sep=",", header=2)
         self.data_frame = rd
@@ -30,15 +34,6 @@ class BayesClassifier:
     def run_test(self):
         self.read_from_csv()
         self.get_w_frequenz()
-        #self.get_classes()
-        #self.get_w_frequenz()
-        #self.separarViews()
-        #self.read_from_csv_with_headers()
-        #self.create_views()
-        #self.get_max_verossimilhanca()
-        #self.bayes()
-        #self.separarViews()
-        #self.teste_get_classes_dinamicamente()
 
     @staticmethod
     def print_data_overview(raw_data):
@@ -252,4 +247,3 @@ class BayesClassifier:
 
 #Begin
 bc = BayesClassifier(True)
-bc.run_test()
