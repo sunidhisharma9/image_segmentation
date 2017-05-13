@@ -237,8 +237,8 @@ class BayesClassifier:
         j = 0
         for index, row in colecao.iterrows():
             classes.append(index)
-        classes = pd.unique(classes)
-        print classes
+        classes = sorted(set(classes))
+        print 'Detected classes', classes
         return classes
 
 
