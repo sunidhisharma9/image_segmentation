@@ -51,7 +51,8 @@ class BayesClassifier:
         self.get_w_frequenz()
         print 'Calculate the probabilities distributions by the max likelihood method'
         self.calculate_prob_diss_classes()
-
+        print 'Our classifier'
+        self.evaluate()
     def read_from_csv(self):
         rd = pd.read_csv("data/segmentation.test.txt", sep=",", header=2)
         self.data_frame = rd
@@ -111,8 +112,6 @@ class BayesClassifier:
             self.apriori[current_index] += 1
 
         self.apriori /= num_elems
-
-        print 'A priori probabilities', self.apriori
 
     def calculate_prob_diss_classes(self):
         my_classes = self.classes
