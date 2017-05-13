@@ -140,10 +140,28 @@ class BayesClassifier:
 
     def predict(self, x):
         probs = np.array([self.p_w_x(x, index) for (index, c) in enumerate(self.classes)])
-        print probs
         max_index = np.argmax(probs)
         return [max_index, self.classes[max_index]]
 
+    def evaluate(self):
+        my_classes = self.classes
+        data_frame = self.data
+        num_total = 0.0
+        num_right = 0.0
+        num_wrong = 0.0
+
+        for (index, row) in data_frame.iterrows():
+            current_class = str(index)
+            current_index = my_classes.index(current_class)
+            row_values = row.values
+            predicted_index = self.predict(row_values)[0]
+            if predicted_index == current_index:
+                num_right += 1.0
+            else:
+                num_wrong += 1.0
+            num_total += 1.0
+
+        print 'Accuracy', num_right/num_total
     def divide_probability(self,value_a, value_b):
         result = round(float(value_a/float(value_b)), 2)
         return result
