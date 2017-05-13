@@ -7,6 +7,9 @@ import csv
 import pickle
 import warnings
 
+#benchmark
+from sklearn.naive_bayes import GaussianNB
+
 # ignore warnings
 warnings.filterwarnings('ignore')
 
@@ -29,6 +32,20 @@ class BayesClassifier:
             self.data = self.get_from_pickle_pandas('shape_view.pickle')
 
         self.classes = self.get_classes_dinamicamente()
+
+        #Build benchmark
+        X = []
+        Y = []
+        for (i, row) in self.data.iterrows():
+            X.append(row.values)
+            current_class = self.classes.index(str(i))
+            Y.append(current_class)
+        X_np = np.array(X)
+        Y_np = np.array(Y).ravel()
+
+        benchmark_classifier = GaussianNB()
+        benchmark_classifier.fit(X_np, Y_np)
+        print 'Banchmark accuracy', benchmark_classifier.score(X_np, Y_np)
 
         print 'Getting a priori probabilities'
         self.get_w_frequenz()
