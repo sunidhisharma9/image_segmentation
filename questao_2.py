@@ -60,7 +60,7 @@ class BayesClassifier:
         self.Y = Y
 
         print 'Getting a priori probabilities'
-        self.get_w_frequenz()
+        self.get_w_frequency()
         print 'Calculate the probabilities distributions by the max likelihood method'
         self.calculate_prob_diss_classes()
 
@@ -92,7 +92,7 @@ class BayesClassifier:
         else:
             return False
 
-    def get_w_frequenz(self):
+    def get_w_frequency(self):
         my_classes = self.classes
         num_classes = len(my_classes)
         num_elems = np.shape(self.X)[0]
