@@ -134,6 +134,16 @@ class BayesClassifier:
         internal_sum = np.sum(diff_2_div)
         return pow(2*np.pi, -0.5*d)*pow(prod, -0.5)*np.exp((-0.5)*internal_sum)
 
+    def p_w_x(self, x, index):
+        probs = np.array([self.p_x_w(x, i) for (i, c) in enumerate(self.classes)])
+        return probs[index]*self.apriori[index]/np.sum(probs)
+
+    def predict(self, x):
+        probs = np.array([self.p_w_x(x, index) for (index, c) in enumerate(self.classes)])
+        print probs
+        max_index = np.argmax(probs)
+        return [max_index, self.classes[max_index]]
+
     def divide_probability(self,value_a, value_b):
         result = round(float(value_a/float(value_b)), 2)
         return result
