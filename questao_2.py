@@ -6,10 +6,10 @@ import numpy as np
 import csv
 import pickle
 import warnings
+import random
 
 # ignore warnings
 warnings.filterwarnings('ignore')
-
 
 class DataVectorizer:
 
@@ -64,18 +64,6 @@ class BayesClassifier:
         print 'Calculate the probabilities distributions by the max likelihood method'
         self.calculate_prob_diss_classes()
 
-    def run_test(self):
-        self.read_from_csv()
-        self.get_w_frequenz()
-
-    @staticmethod
-    def print_data_overview(raw_data):
-        raw_data = BayesClassifier.cvt_np_array(raw_data)
-        num_elems = np.shape(raw_data)[0]
-        num_vars = np.shape(raw_data)[1]
-
-        print 'Numero de elementos:', num_elems
-        print 'Numero de variaveis:', num_vars
 
     @staticmethod
     def cvt_np_array(matrix):
@@ -120,8 +108,9 @@ class BayesClassifier:
     def calculate_prob_diss_classes(self):
         my_classes = self.classes
         num_classes = len(my_classes)
-        num_elems = np.shape(self.X)[0]
+
         element_size = np.shape(self.X)[1]
+
         self.centers = np.zeros((num_classes, element_size))
         self.num_for_class = np.zeros((num_classes, 1))
         self.diags = np.zeros((num_classes, element_size))
@@ -140,6 +129,11 @@ class BayesClassifier:
             self.diags[current_index] += pow(row - current_center, 2)
 
         self.diags /= self.num_for_class
+
+        for c in xrange(num_classes):
+            for d in xrange(element_size):
+                if self.diags[c][d] == 0:
+                    self.diags[c][d] = 0.0000000001 #Avoid zero divisions
 
 
     def p_x_w(self, x, index):
@@ -162,7 +156,6 @@ class BayesClassifier:
         return [max_index, self.classes[max_index]]
 
     def evaluate(self, X, Y):
-        my_classes = self.classes
         num_total = 0.0
         num_right = 0.0
         num_wrong = 0.0
@@ -193,6 +186,59 @@ class BayesClassifier:
 
 #Begin
 
+def make_30_fold_test(data_vectorizer):
+    X = data_vectorizer.X
+    Y = data_vectorizer.Y
+    classes = data_vectorizer.classes
+    num_classes = len(classes)
+    X_for_class = []
+    X_index = [(index, x) for (index, x) in enumerate(X)]
+    for i in xrange(num_classes):
+        separated_X = [[x,i] for (index, x) in X_index if Y[index]==i]
+        random.shuffle(separated_X)
+        X_for_class.append(separated_X)
+
+    folds = []
+    for k in xrange(30):
+        low_index = k*10
+        high_index = low_index + 10
+        new_fold = []
+        for i in xrange(num_classes):
+            new_fold += X_for_class[i][low_index:high_index]
+        random.shuffle(new_fold)
+        folds.append(new_fold)
+
+    print 'Folds created'
+    accuracies = []
+    for k in xrange(30):
+        test = folds[k]
+        train = []
+        for i in xrange(30):
+            if i != k:
+                train += folds[i]
+        X_train = np.array([t[0] for t in train])
+        Y_train = np.array([t[1] for t in train]).ravel()
+        X_test = np.array([t[0] for t in test])
+        Y_test = np.array([t[1] for t in test]).ravel()
+
+        bc = BayesClassifier(X_train, Y_train, classes)
+        new_accuracy = bc.evaluate(X_test, Y_test)
+        print 'Accuracy', k, 'of 30', new_accuracy
+        accuracies.append(new_accuracy)
+    return accuracies
+
+print 'Testing RGB view'
 dv = DataVectorizer(filename='RGB_view.pickle')
-bc = BayesClassifier(dv.X, dv.Y, dv.classes)
-print 'Accuracy', bc.evaluate(dv.X, dv.Y)
+accuracies_RGB = make_30_fold_test(dv)
+print 'Testing Shape view'
+dv = DataVectorizer(filename='shape_view.pickle')
+accuracies_SHAPE = make_30_fold_test(dv)
+
+out_rgb = open('accuracies_RGB.pickle', 'wb')
+out_shape = open('accuracies_SHAPE.pickle', 'wb')
+
+pickle.dump(accuracies_RGB, out_rgb)
+pickle.dump(accuracies_SHAPE, out_shape)
+
+out_rgb.close()
+out_shape.close()
