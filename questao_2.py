@@ -12,18 +12,24 @@ warnings.filterwarnings('ignore')
 
 
 class BayesClassifier:
-    def __init__(self, read_files=False):
+    def __init__(self, read_files=False, view_to_use=1):
         self.read_files = read_files
 
         if read_files:
-            print ("Reading input file")
+            print ("Loading view to use")
             self.read_from_csv()
-            self.classes = self.get_classes_dinamicamente()
+            self.create_views()
             self.print_data_overview(self.raw_data)
 
-            #get a priori probs
-            print 'Getting a priori probabilities'
-            self.get_w_frequenz()
+        if view_to_use == 1:
+            self.data = self.get_from_pickle_pandas('rgb_view.pickle')
+        else:
+            self.data = self.get_from_pickle_pandas('shape_view.pickle')
+
+        self.classes = self.get_classes_dinamicamente()
+
+        print 'Getting a priori probabilities'
+        self.get_w_frequenz()
 
     def read_from_csv(self):
         rd = pd.read_csv("data/segmentation.test.txt", sep=",", header=2)
@@ -230,7 +236,7 @@ class BayesClassifier:
         max_w = None
 
     def get_classes_dinamicamente(self):
-        colecao = self.data_frame
+        colecao = self.data
         classes=[]
         class_name=""
         index_number = 1
