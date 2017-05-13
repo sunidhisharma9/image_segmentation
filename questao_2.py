@@ -7,57 +7,62 @@ import csv
 import pickle
 import warnings
 
-#benchmark
-from sklearn.naive_bayes import GaussianNB
-
 # ignore warnings
 warnings.filterwarnings('ignore')
 
 
-class BayesClassifier:
-    def __init__(self, read_files=False, view_to_use=1):
-        self.read_files = read_files
+class DataVectorizer:
 
-        if read_files:
-            print ("Loading view to use")
-            self.read_from_csv()
-            self.create_views()
-            self.print_data_overview(self.raw_data)
+    def __init__(self, pandas_data=None, filename=None):
+        self.data_frame = None
 
-        if view_to_use == 1:
-            print 'Using the rgb view'
-            self.data = self.get_from_pickle_pandas('rgb_view.pickle')
-        else:
-            print 'Using the shape view'
-            self.data = self.get_from_pickle_pandas('shape_view.pickle')
+        if not filename is None:
+            self.get_from_pickle_pandas(filename)
+        elif not pandas_data is None:
+            self.data_frame = pandas_data
 
-        self.classes = self.get_classes_dinamicamente()
+        if self.data_frame is None:
+            raise ValueError('No input data defined')
 
-        #Build benchmark
+        self.get_classes_from_data_frame()
+        self.create_vectors()
+
+    def get_from_pickle_pandas(self, filename):
+        self.data_frame = pd.read_pickle(filename)
+
+    def read_from_csv(self, filename):
+        self.data_frame = pd.read_csv(filename, sep=",", header=2)
+
+    def get_classes_from_data_frame(self):
+        my_data = self.data_frame
+        classes=[]
+        for index, row in my_data.iterrows():
+            classes.append(index)
+        self.classes = sorted(set(classes))
+
+    def create_vectors(self):
         X = []
         Y = []
-        for (i, row) in self.data.iterrows():
+        for (i, row) in self.data_frame.iterrows():
             X.append(row.values)
             current_class = self.classes.index(str(i))
             Y.append(current_class)
-        X_np = np.array(X)
-        Y_np = np.array(Y).ravel()
+        self.X = np.array(X)
+        self.Y = np.array(Y).ravel()
 
-        benchmark_classifier = GaussianNB()
-        benchmark_classifier.fit(X_np, Y_np)
-        print 'Banchmark accuracy', benchmark_classifier.score(X_np, Y_np)
+#---------------
+
+
+class BayesClassifier:
+    def __init__(self, X, Y, classes):
+        self.classes = classes
+        self.X = X
+        self.Y = Y
 
         print 'Getting a priori probabilities'
         self.get_w_frequenz()
         print 'Calculate the probabilities distributions by the max likelihood method'
         self.calculate_prob_diss_classes()
-        print 'Our classifier'
-        print 'Accuracy', self.evaluate()
-    def read_from_csv(self):
-        rd = pd.read_csv("data/segmentation.test.txt", sep=",", header=2)
-        self.data_frame = rd
-        rd = rd.values  # Numpy array
-        self.raw_data = rd
 
     def run_test(self):
         self.read_from_csv()
@@ -78,7 +83,8 @@ class BayesClassifier:
             matrix = np.array(matrix)
         return matrix
 
-    def read_from_csv_with_headers(self):
+    @staticmethod
+    def read_from_csv_with_headers():
         with open("data/segmentation.test.txt") as csv_file:
             reader = csv.reader(csv_file)
             for row in reader:
@@ -100,43 +106,38 @@ class BayesClassifier:
 
     def get_w_frequenz(self):
         my_classes = self.classes
-        data_frame = self.data
         num_classes = len(my_classes)
-        num_elems = np.shape(data_frame)[0]
+        num_elems = np.shape(self.X)[0]
 
         self.apriori = np.zeros((num_classes, 1))
 
-        for index, row in data_frame.iterrows():
-            current_class = str(index)
-            current_index = my_classes.index(current_class)
+        for index, row in enumerate(self.X):
+            current_index = self.Y[index]
             self.apriori[current_index] += 1
 
         self.apriori /= num_elems
 
     def calculate_prob_diss_classes(self):
         my_classes = self.classes
-        data_frame = self.data
         num_classes = len(my_classes)
-        num_elems = np.shape(data_frame)[0]
-        element_size = np.shape(data_frame)[1]
+        num_elems = np.shape(self.X)[0]
+        element_size = np.shape(self.X)[1]
         self.centers = np.zeros((num_classes, element_size))
         self.num_for_class = np.zeros((num_classes, 1))
         self.diags = np.zeros((num_classes, element_size))
 
         #Compute centers
-        for index, row in data_frame.iterrows():
-            current_class = str(index)
-            current_index = my_classes.index(current_class)
-            self.centers[current_index] += row.values
+        for index, row in enumerate(self.X):
+            current_index = self.Y[index]
+            self.centers[current_index] += row
             self.num_for_class[current_index] += 1
         self.centers /= self.num_for_class
 
         #Compute variance matrix diagonals
-        for index, row in data_frame.iterrows():
-            current_class = str(index)
-            current_index = my_classes.index(current_class)
+        for index, row in enumerate(self.X):
+            current_index = self.Y[index]
             current_center = self.centers[current_index]
-            self.diags[current_index] += pow(row.values - current_center, 2)
+            self.diags[current_index] += pow(row - current_center, 2)
 
         self.diags /= self.num_for_class
 
@@ -160,17 +161,15 @@ class BayesClassifier:
         max_index = np.argmax(probs)
         return [max_index, self.classes[max_index]]
 
-    def evaluate(self):
+    def evaluate(self, X, Y):
         my_classes = self.classes
-        data_frame = self.data
         num_total = 0.0
         num_right = 0.0
         num_wrong = 0.0
 
-        for (index, row) in data_frame.iterrows():
-            current_class = str(index)
-            current_index = my_classes.index(current_class)
-            row_values = row.values
+        for (index, row) in enumerate(X):
+            current_index = Y[index]
+            row_values = row
             predicted_index = self.predict(row_values)[0]
             if predicted_index == current_index:
                 num_right += 1.0
@@ -178,7 +177,7 @@ class BayesClassifier:
                 num_wrong += 1.0
             num_total += 1.0
 
-        print num_right/num_total
+        return num_right/num_total
 
     def create_views(self):
         shape_columns=["REGION-CENTROID-COL", "REGION-CENTROID-ROW", "REGION-PIXEL-COUNT", "SHORT-LINE-DENSITY-5", "SHORT-LINE-DENSITY-2", "VEDGE-MEAN", "VEDGE-SD", "HEDGE-MEAN", "HEDGE-SD", "INTENSITY-MEAN"]
@@ -191,30 +190,9 @@ class BayesClassifier:
         self.persist(rgb_view,"rgb_view.pickle")
         self.rgb_view = rgb_view
 
-    def pickled_dataframe_to_numpy_array(self, data_frame):
-        new_np_array = pd.DataFrame(data_frame)
-        return new_np_array
-
-    @staticmethod
-    def get_from_pickle_pandas(file_name):
-        df = pd.read_pickle(file_name)
-        return df
-
-    def get_classes_dinamicamente(self):
-        colecao = self.data
-        classes=[]
-        class_name=""
-        index_number = 1
-        j = 0
-        for index, row in colecao.iterrows():
-            classes.append(index)
-        classes = sorted(set(classes))
-        print 'Detected classes', classes
-        return classes
-
-
-
-
 
 #Begin
-#bc = BayesClassifier(True)
+
+dv = DataVectorizer(filename='RGB_view.pickle')
+bc = BayesClassifier(dv.X, dv.Y, dv.classes)
+print 'Accuracy', bc.evaluate(dv.X, dv.Y)
