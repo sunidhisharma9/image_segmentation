@@ -30,6 +30,6 @@ for e in elems:
     U[index][set_dict[e]] = 1
     index += 1
 
-U_out = open('apriori_U.pickle', 'wb')
+U_out = open('result_pickles/apriori_U.pickle', 'wb')
 pickle.dump(U, U_out)
 U_out.close()

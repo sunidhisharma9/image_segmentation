@@ -2,27 +2,29 @@ import matplotlib.pyplot as plt
 import pickle
 import numpy as np
 
-rgb_accuracies = pickle.load(open('accuracies_RGB.pickle', 'rb'))
-shape_accuracies = pickle.load(open('accuracies_SHAPE.pickle', 'rb'))
+rgb_accuracies = pickle.load(open('result_pickles/accuracies_RGB.pickle', 'rb'))
+shape_accuracies = pickle.load(open('result_pickles/accuracies_SHAPE.pickle', 'rb'))
 
 rgb_np = np.array(rgb_accuracies)
 shape_np = np.array(shape_accuracies)
 
-t_29_0475 = 2.0452
+def create_IC_interval(np_array):
+    t_29_0475 = 2.0452
+    len_array = len(np_array)
+    mean_array = np.mean(np_array)
+    std_array = np.std(np_array, ddof=1)
+    int_lower_array = mean_array - t_29_0475*std_array/np.sqrt(len_array)
+    int_high_array = mean_array + t_29_0475*std_array/np.sqrt(len_array)
+    return [mean_array, int_lower_array, int_high_array]
 
-mean_rgb = np.mean(rgb_np)
-std_rgb = np.std(rgb_np, ddof=1)
-int_lower_rgb = mean_rgb - t_29_0475*std_rgb/np.sqrt(30)
-int_high_rgb = mean_rgb + t_29_0475*std_rgb/np.sqrt(30)
-mean_shape = np.mean(shape_np)
-std_shape = np.std(shape_np, ddof=1)
-int_lower_shape = mean_shape - t_29_0475*std_shape/np.sqrt(30)
-int_high_shape = mean_shape + t_29_0475*std_shape/np.sqrt(30)
+print 'BAYES-----------'
 
+ic_bayes_rgb = create_IC_interval(rgb_np)
 print 'RGB'
-print 'Mean', mean_rgb
-print 'IC 95 [', int_lower_rgb, ',' , int_high_rgb, ']'
+print 'Mean', ic_bayes_rgb[0]
+print 'IC 95 [', ic_bayes_rgb[1], ',' , ic_bayes_rgb[2], ']'
 
+ic_bayes_shape = create_IC_interval(shape_np)
 print 'SHAPE'
-print 'Mean', mean_shape
-print 'IC 95 [', int_lower_shape, ',' , int_high_shape, ']'
+print 'Mean', ic_bayes_shape[0]
+print 'IC 95 [', ic_bayes_shape[1], ',' , ic_bayes_shape[2], ']'
