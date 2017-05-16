@@ -227,6 +227,40 @@ def make_30_fold_test(data_vectorizer):
         accuracies.append(new_accuracy)
     return accuracies
 
+def friedman_test(dv):
+
+    y = dv.Y
+    x = dv.X
+    classes = dv.classes
+    num_of_rows = len(y)
+    num_of_columns = len(x[0])
+    num_of_classes = len(classes)
+    sorted_view = np.sort(x)
+    ranks = [] #np.array([[num_of_classes, 1]])
+    sum_x = 0
+    for w in xrange(num_of_rows):
+        for x in xrange(num_of_columns):
+            if w < num_of_rows-1:
+                if y[w + 1] != y[w]:
+                    sum_x += sorted_view[w][x]
+                    if x == num_of_columns - 1:
+                        ranks.append(sum_x)
+                        print 'Ranking class ', classes[y[w] - 1], sum_x
+                        print 'Preparing for next class...'
+                        sum_x = 0
+                else:
+                    sum_x += sorted_view[w][x]
+            else:
+                sum_x += sorted_view[w][x]
+                if x == num_of_columns - 1:
+                    ranks.append(sum_x)
+                    print 'Ranking class ', classes[y[w] - 1], sum_x
+                    print 'Preparing for next class...'
+                    sum_x = 0
+                else:
+                    sum_x += sorted_view[w][x]
+
+    print ranks
 print 'Testing RGB view'
 dv = DataVectorizer(filename='RGB_view.pickle')
 accuracies_RGB = make_30_fold_test(dv)
