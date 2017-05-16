@@ -39,6 +39,6 @@ for i in xrange(49):
     print 'New Accuracy', new_accuracy
     accuracies.append([K, new_accuracy])
 
-out = open('knn_accuracies.pickle', 'wb')
+out = open('result_pickles/knn_accuracies_for_k.pickle', 'wb')
 pickle.dump(accuracies, out)
 out.close()
