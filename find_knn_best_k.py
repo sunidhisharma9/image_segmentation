@@ -25,10 +25,10 @@ size_test = int(0.15*float(len_all_data))
 
 train = all_data[:size_train]
 validation = all_data[size_train+1:size_train + size_validation]
-X_train = np.array([x for (x,y) in all_data])
-Y_train = np.array([y for (x,y) in all_data])
-X_validation = np.array([x for (x,y) in all_data])
-Y_validation = np.array([y for (x,y) in all_data])
+X_train = np.array([x for (x,y) in train])
+Y_train = np.array([y for (x,y) in train])
+X_validation = np.array([x for (x,y) in validation])
+Y_validation = np.array([y for (x,y) in validation])
 
 accuracies = []
 for i in xrange(49):
