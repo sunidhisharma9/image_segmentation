@@ -6,48 +6,66 @@ import numpy as np
 import csv
 import pickle
 import warnings
+import random
+
+from KnnClassifier import *
 
 # ignore warnings
 warnings.filterwarnings('ignore')
 
 
+class DataVectorizer:
+    def __init__(self, pandas_data=None, filename=None):
+        self.data_frame = None
+
+        if not filename is None:
+            self.get_from_pickle_pandas(filename)
+        elif not pandas_data is None:
+            self.data_frame = pandas_data
+
+        if self.data_frame is None:
+            raise ValueError('No input data defined')
+
+        self.get_classes_from_data_frame()
+        self.create_vectors()
+
+    def get_from_pickle_pandas(self, filename):
+        self.data_frame = pd.read_pickle(filename)
+
+    def read_from_csv(self, filename):
+        self.data_frame = pd.read_csv(filename, sep=",", header=2)
+
+    def get_classes_from_data_frame(self):
+        my_data = self.data_frame
+        classes = []
+        for index, row in my_data.iterrows():
+            classes.append(index)
+        self.classes = sorted(set(classes))
+
+    def create_vectors(self):
+        X = []
+        Y = []
+        for (i, row) in self.data_frame.iterrows():
+            X.append(row.values)
+            current_class = self.classes.index(str(i))
+            Y.append(current_class)
+        self.X = np.array(X)
+        self.Y = np.array(Y).ravel()
+
+
+# ---------------
+
+
 class BayesClassifier:
-    def __init__(self, read_files=False):
-        self.read_files = read_files
+    def __init__(self, X, Y, classes):
+        self.classes = classes
+        self.X = X
+        self.Y = Y
 
-        if read_files:
-            print ("Reading input file")
-            self.read_from_csv()
-            self.classes = self.get_classes_dinamicamente()
-            self.print_data_overview(self.raw_data)
-
-    def read_from_csv(self):
-        rd = pd.read_csv("data/segmentation.test.txt", sep=",", header=2)
-        self.data_frame = rd
-        rd = rd.values  # Numpy array
-        self.raw_data = rd
-
-    def run_test(self):
-        self.read_from_csv()
-        self.get_w_frequenz()
-        #self.get_classes()
-        #self.get_w_frequenz()
-        #self.separarViews()
-        #self.read_from_csv_with_headers()
-        #self.create_views()
-        #self.get_max_verossimilhanca()
-        #self.bayes()
-        #self.separarViews()
-        #self.teste_get_classes_dinamicamente()
-
-    @staticmethod
-    def print_data_overview(raw_data):
-        raw_data = BayesClassifier.cvt_np_array(raw_data)
-        num_elems = np.shape(raw_data)[0]
-        num_vars = np.shape(raw_data)[1]
-
-        print 'Numero de elementos:', num_elems
-        print 'Numero de variaveis:', num_vars
+        print 'Getting a priori probabilities'
+        self.get_w_frequency()
+        print 'Calculate the probabilities distributions by the max likelihood method'
+        self.calculate_prob_diss_classes()
 
     @staticmethod
     def cvt_np_array(matrix):
@@ -55,201 +73,239 @@ class BayesClassifier:
             matrix = np.array(matrix)
         return matrix
 
-    def read_from_csv_with_headers(self):
+    @staticmethod
+    def read_from_csv_with_headers():
         with open("data/segmentation.test.txt") as csv_file:
             reader = csv.reader(csv_file)
             for row in reader:
                 print row
 
-
     def persist(self, to_persist, file_name):
-        file = open(file_name,'wb')
-        pickle.dump(to_persist,file)
+        file = open(file_name, 'wb')
+        pickle.dump(to_persist, file)
         file.close()
 
-    #checks if the named file exists
-    def gets_w_classes(self,file_w_class_name):
-        file = open(file_w_class_name,'wb')
+    # checks if the named file exists
+    def gets_w_classes(self, file_w_class_name):
+        file = open(file_w_class_name, 'wb')
         if file is not None:
             return True
         else:
             return False
 
-    def get_w_frequenz(self):
-        w = self.classes
-        df = self.get_from_pickle_pandas('rgb_view.pickle') #self.data_frame
-        w_frequenz = None
-        num_elems = np.shape(df)[0]
+    def get_w_frequency(self):
+        my_classes = self.classes
+        num_classes = len(my_classes)
+        num_elems = np.shape(self.X)[0]
 
-        qtd_w_brickface = 0
-        qtd_w_sky = 0
-        qtd_w_foliage = 0
-        qtd_w_cement = 0
-        qtd_w_window = 0
-        qtd_w_path = 0
-        qtd_w_grass = 0
+        self.apriori = np.zeros((num_classes, 1))
 
-        for index, row in df.iterrows():
-            if str(index).__eq__(w[0]):
-                qtd_w_grass  += 1
-            if str(index).__eq__(w[1]):
-                qtd_w_path += 1
-            if str(index).__eq__ (w[2]):
-                qtd_w_window += 1
-            if str(index).__eq__(w[3]):
-                qtd_w_cement += 1
-            if str(index).__eq__(w[4]):
-                qtd_w_foliage += 1
-            if str(index).__eq__(w[5]):
-                qtd_w_sky += 1
-            if str(index).__eq__(w[6]):
-                qtd_w_brickface += 1
+        for index, row in enumerate(self.X):
+            current_index = self.Y[index]
+            self.apriori[current_index] += 1
 
-        w_frequenz = np.array([
-            [w[0], qtd_w_grass, self.divide_probability(qtd_w_grass,num_elems)],
-             [w[1], qtd_w_path, self.divide_probability(qtd_w_path,num_elems)],
-             [w[2], qtd_w_window, self.divide_probability(qtd_w_window,num_elems)],
-             [w[3], qtd_w_cement, self.divide_probability(qtd_w_cement,num_elems)],
-             [w[4], qtd_w_foliage, self.divide_probability(qtd_w_foliage,num_elems)],
-             [w[5], qtd_w_sky, self.divide_probability(qtd_w_sky,num_elems)],
-             [w[6], qtd_w_brickface, self.divide_probability(qtd_w_brickface,num_elems)]])
-        self.persist(w_frequenz,'w_frequence.pickle')
-        print w_frequenz
+        self.apriori /= num_elems
 
-    def divide_probability(self,value_a, value_b):
-        result = round(float(value_a/float(value_b)), 2)
-        return result
+    def calculate_prob_diss_classes(self):
+        my_classes = self.classes
+        num_classes = len(my_classes)
 
-    def separarViews(self):
-        size_view_1 = 9
-        size_view_2 = 10
-        columns = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-        file = None
-        #with open("data/segmentation.test.txt","rb") as csv_with_headers:
-        file = pd.read_csv("data/segmentation.test.txt","rb",header=2) #csv.reader(csv_with_headers)
-         #  for index, line in enumerate(reader):
-        print file
+        element_size = np.shape(self.X)[1]
+
+        self.centers = np.zeros((num_classes, element_size))
+        self.num_for_class = np.zeros((num_classes, 1))
+        self.diags = np.zeros((num_classes, element_size))
+
+        # Compute centers
+        for index, row in enumerate(self.X):
+            current_index = self.Y[index]
+            self.centers[current_index] += row
+            self.num_for_class[current_index] += 1
+        self.centers /= self.num_for_class
+
+        # Compute variance matrix diagonals
+        for index, row in enumerate(self.X):
+            current_index = self.Y[index]
+            current_center = self.centers[current_index]
+            self.diags[current_index] += pow(row - current_center, 2)
+
+        self.diags /= self.num_for_class
+
+        for c in xrange(num_classes):
+            for d in xrange(element_size):
+                if self.diags[c][d] == 0:
+                    self.diags[c][d] = 0.0000000001  # Avoid zero divisions
+
+    def p_x_w(self, x, index):
+        d = len(x)
+        center = self.centers[index]
+        variance_diag = self.diags[index]
+        prod = np.prod(variance_diag)
+        diff_2 = pow(x - center, 2)
+        diff_2_div = diff_2 / variance_diag
+        internal_sum = np.sum(diff_2_div)
+        return pow(2 * np.pi, -0.5 * d) * pow(prod, -0.5) * np.exp((-0.5) * internal_sum)
+
+    def p_w_x(self, x, index):
+        probs = np.array([self.p_x_w(x, i) for (i, c) in enumerate(self.classes)])
+        return probs[index] * self.apriori[index] / np.sum(probs)
+
+    def predict(self, x):
+        probs = np.array([self.p_w_x(x, index) for (index, c) in enumerate(self.classes)])
+        max_index = np.argmax(probs)
+        return [max_index, self.classes[max_index]]
+
+    def evaluate(self, X, Y):
+        num_total = 0.0
+        num_right = 0.0
+        num_wrong = 0.0
+
+        for (index, row) in enumerate(X):
+            current_index = Y[index]
+            row_values = row
+            predicted_index = self.predict(row_values)[0]
+            if predicted_index == current_index:
+                num_right += 1.0
+            else:
+                num_wrong += 1.0
+            num_total += 1.0
+
+        return num_right / num_total
 
     def create_views(self):
-        shape_columns=["REGION-CENTROID-COL", "REGION-CENTROID-ROW", "REGION-PIXEL-COUNT", "SHORT-LINE-DENSITY-5", "SHORT-LINE-DENSITY-2", "VEDGE-MEAN", "VEDGE-SD", "HEDGE-MEAN", "HEDGE-SD", "INTENSITY-MEAN"]
-        rgb_columns=["RAWRED-MEAN", "RAWBLUE-MEAN", "RAWGREEN-MEAN", "EXRED-MEAN", "EXBLUE-MEAN", "EXGREEN-MEAN", "VALUE-MEAN", "SATURATION-MEAN","HUE-MEAN"]
+        shape_columns = ["REGION-CENTROID-COL", "REGION-CENTROID-ROW", "REGION-PIXEL-COUNT", "SHORT-LINE-DENSITY-5",
+                         "SHORT-LINE-DENSITY-2", "VEDGE-MEAN", "VEDGE-SD", "HEDGE-MEAN", "HEDGE-SD", "INTENSITY-MEAN"]
+        rgb_columns = ["RAWRED-MEAN", "RAWBLUE-MEAN", "RAWGREEN-MEAN", "EXRED-MEAN", "EXBLUE-MEAN", "EXGREEN-MEAN",
+                       "VALUE-MEAN", "SATURATION-MEAN", "HUE-MEAN"]
         df = self.data_frame
         shape_view = df[shape_columns].copy()
         self.persist(shape_view, "shape_view.pickle")
         self.shape_view = shape_view
         rgb_view = df[rgb_columns].copy()
-        self.persist(rgb_view,"rgb_view.pickle")
+        self.persist(rgb_view, "rgb_view.pickle")
         self.rgb_view = rgb_view
 
-    def get_max_verossimilhanca(self):
-        df = self.data_frame
-        w_grass_max = 0
-        w_path_max = 0
-        w_brickface_max = 0
-        w_sky_max = 0
-        w_window_max = 0
-        w_foliage_max = 0
-        w_cement_max = 0
 
-        #get grass pickled file
-        df_grass = self.get_from_pickle_pandas("grass.pickle")
-        np_grass_array = self.pickled_dataframe_to_numpy_array(df_grass)
-        w_grass_max = self.process_max(np_grass_array)
+# Begin
 
-        # get path_pickled file
-        df_path = self.get_from_pickle_pandas("path.pickle")
-        np_path_array = self.pickled_dataframe_to_numpy_array(df_path)
-        w_path_max = self.process_max(np_path_array)
+def make_30_fold_test(data_vectorizer):
+    X = data_vectorizer.X
+    Y = data_vectorizer.Y
+    classes = data_vectorizer.classes
+    num_classes = len(classes)
+    X_for_class = []
+    X_index = [(index, x) for (index, x) in enumerate(X)]
+    for i in xrange(num_classes):
+        separated_X = [[x, i] for (index, x) in X_index if Y[index] == i]
+        random.shuffle(separated_X)
+        X_for_class.append(separated_X)
 
-        # get brickface pickled file)
-        df_brickface = self.get_from_pickle_pandas("brickface.pickle")
-        np_brickface_array = self.pickled_dataframe_to_numpy_array(df_brickface)
-        w_brickface_max = self.process_max(np_brickface_array)
+    folds = []
+    for k in xrange(30):
+        low_index = k * 10
+        high_index = low_index + 10
+        new_fold = []
+        for i in xrange(num_classes):
+            new_fold += X_for_class[i][low_index:high_index]
+        random.shuffle(new_fold)
+        folds.append(new_fold)
 
-        #get sky pickled file
-        df_sky = self.get_from_pickle_pandas("sky.pickle")
-        np_sky_array = self.pickled_dataframe_to_numpy_array(df_sky)
-        w_sky_max = self.process_max(np_sky_array)
+    print 'Folds created'
+    accuracies = []
+    for k in xrange(30):
+        test = folds[k]
+        train = []
+        for i in xrange(30):
+            if i != k:
+                train += folds[i]
+        X_train = np.array([t[0] for t in train])
+        Y_train = np.array([t[1] for t in train]).ravel()
+        X_test = np.array([t[0] for t in test])
+        Y_test = np.array([t[1] for t in test]).ravel()
 
-        # get window pickled file
-        df_window = self.get_from_pickle_pandas("window.pickle")
-        np_window_array = self.pickled_dataframe_to_numpy_array(df_window)
-        w_window_max = self.process_max(np_window_array)
-
-        # get foliage pickled file
-        df_foliage = self.get_from_pickle_pandas("foliage.pickle")
-        np_foliage_array = self.pickled_dataframe_to_numpy_array(df_foliage)
-        w_window_max = self.process_max(np_foliage_array)
-
-        # get cement pickled file
-        df_cement = self.get_from_pickle_pandas("cement.pickle")
-        np_cement_array = self.pickled_dataframe_to_numpy_array(df_cement)
-        w_cement_max = self.process_max(np_cement_array)
-
+        bc = BayesClassifier(X_train, Y_train, classes)
+        new_accuracy = bc.evaluate(X_test, Y_test)
+        print 'Accuracy', k, 'of 30', new_accuracy
+        accuracies.append(new_accuracy)
+    return accuracies
 
 
-    def process_max(self, np_array):
-        i = 0  # linha
-        j = 0  # coluna
-        max = 0
-        old_value = 0
-        num_of_rows = np.shape(np_array)[0]
-        np_array = np_array.values
+def friedman_test(dv):
 
-        while i < num_of_rows:
-            old_value = max
-            if max < np.amax(np_array[i]):
-                max = np.amax(np_array[i])
-                print 'New maximal value found', 'old value: ', old_value, 'new value', max
-            i = i + 1
-        return max
+    y = dv.Y
+    #Sorting from minimal to maximal values
+    x = np.sort(dv.X)
+    classes = dv.classes
+ #   bc = BayesClassifier(x, y, classes)
+ #   knn = KnnClassifier(x, y, 7)
+ #   knn_votes = knn.evaluate(x,y)
+ #   bayes_result = bc.evaluate(x, y)
+    knn_result = 0
+    num_of_rows = len(y)
+    num_of_columns = len(x[0])
+    num_of_classes = len(classes)
+    new_ndarray = np.zeros(shape=(num_of_rows, num_of_columns+1))
+    for w_tmp in xrange(num_of_rows):
+        new_ndarray[w_tmp][0] = y[w_tmp]
+        for x_tmp in xrange(num_of_columns):
+            new_ndarray[w_tmp][x_tmp+1] = x[w_tmp][x_tmp]
+    # Creating an empty rank
+    rank = create_empty_rank(num_of_classes=num_of_classes)
+    rank_length=rank.__len__()
+    sum_x = 0
+    for new_w in xrange(num_of_classes):
+        for w in xrange(num_of_rows):
+            if y[w] == new_ndarray[w][0]:
+                for x in xrange(num_of_columns):
+                    #forwarding from w (class) column
+                    x += 1
+                    if w < num_of_rows - 1:
+                        if y[w + 1] != y[w]:
+                            sum_x += new_ndarray[w][x]
+                            sum_x = put_to_rank(classes=classes, rank=rank,rank_length=rank_length,sum_x=sum_x,w=w,y=y)
+                        else:
+                            sum_x += new_ndarray[w][x]
+                    else:
+                        sum_x = put_to_rank(classes, rank,rank_length, sum_x, w, y)  #new_ndarray[w][x]
+
+    print rank
+    print 'Done'
+
+#puts values to rank and returns a new counter
+def put_to_rank(classes, rank, rank_length, sum_x, w, y):
+    for g in xrange(rank_length - 1):
+        for k in xrange(rank[g].__len__()):
+            if rank[g][k - 1] == y[w]:
+                print 'Ranking class ', classes[y[w] - 1], sum_x
+                rank[1][k - 1] += sum_x
+                print 'Preparing for next class...'
+                sum_x = 0
+    return sum_x
+
+# Returns an empty rank
+def create_empty_rank(num_of_classes):
+    rank = np.zeros(shape=(2, num_of_classes))
+    # defining the groups
+    for n in xrange(num_of_classes):
+        rank[0][n] = n
+    return rank
 
 
-    def pickled_dataframe_to_numpy_array(self, data_frame):
-        new_np_array = pd.DataFrame(data_frame)
-        return new_np_array
-
-    @staticmethod
-    def get_from_pickle_pandas(file_name):
-        df = pd.read_pickle(file_name)
-        return df
-
-    def bayes(self):
-        df_frequenz = self.get_from_pickle_pandas('w_frequenz.pickle')
-        class_name = None
-        w_collection = None
-        E = 0
-        Pwj=0
-        for w in self.classes:
-            w_collection = self.get_from_pickle_pandas(class_name)
-            w_np_array = self.pickled_dataframe_to_numpy_array(w_collection)
-            E = np.sum(w_collection)
-            i=0
-           # for j in w_collection:
-           #     E +=w_collection[j]
-        #x = np.shape(self.raw_data)[1] #0,14
-        #w = df_frequenz[0][1] #300
-
-        # somatorio
-        #p_x_w = None
-        max_w = None
-
-    def get_classes_dinamicamente(self):
-        colecao = self.data_frame
-        classes=[]
-        class_name=""
-        index_number = 1
-        j = 0
-        for index, row in colecao.iterrows():
-            classes.append(index)
-        classes = pd.unique(classes)
-        print classes
-        return classes
+#print 'Testing RGB view'
+dv = DataVectorizer(filename='RGB_view.pickle')
+accuracies_RGB = make_30_fold_test(dv)
+friedman_test(dv)
+#print 'Testing Shape view'
+#dv = DataVectorizer(filename='shape_view.pickle')
+#accuracies_SHAPE = make_30_fold_test(dv)
 
 
 
+out_rgb = open('accuracies_RGB.pickle', 'wb')
+out_shape = open('accuracies_SHAPE.pickle', 'wb')
 
+pickle.dump(accuracies_RGB, out_rgb)
+#pickle.dump(accuracies_SHAPE, out_shape)
 
-#Begin
-bc = BayesClassifier(True)
-bc.run_test()
+out_rgb.close()
+out_shape.close()
