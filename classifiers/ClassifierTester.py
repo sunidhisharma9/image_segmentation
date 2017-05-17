@@ -9,11 +9,12 @@ import random
 
 from classifiers.BayesClassifier import *
 from classifiers.KnnClassifier import *
+from classifiers.MajorityVoteClassifier import *
 
 class ClassifierTester:
 
     @staticmethod
-    def make_n_fold_test(data_vectorizer, n, is_bayes=True):
+    def make_n_fold_test(data_vectorizer, n, type_classifier='bayes'):
         X = data_vectorizer.X
         Y = data_vectorizer.Y
         classes = data_vectorizer.classes
@@ -54,10 +55,14 @@ class ClassifierTester:
             Y_test = np.array([t[1] for t in test]).ravel()
 
 
-            if is_bayes:
+            if type_classifier == 'bayes':
                 classifier = BayesClassifier(X_train, Y_train, classes)
-            else:
+            elif type_classifier == 'knn':
                 classifier = KnnClassifier(X_train, Y_train, 1)
+            elif type_classifier == 'majority':
+                classifier = MajorityVoteClassifier(X_train, Y_train, classes)
+            else:
+                raise ValueError('Unknown classifier: ' + type_classifier)
                 
             new_accuracy = classifier.evaluate(X_test, Y_test)
             print 'Accuracy', k, 'of', n , new_accuracy
