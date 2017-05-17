@@ -24,19 +24,6 @@ class BayesClassifier:
             matrix = np.array(matrix)
         return matrix
 
-    @staticmethod
-    def read_from_csv_with_headers():
-        with open("data/segmentation.test.txt") as csv_file:
-            reader = csv.reader(csv_file)
-            for row in reader:
-                print row
-
-
-    def persist(self, to_persist, file_name):
-        file = open(file_name,'wb')
-        pickle.dump(to_persist,file)
-        file.close()
-
     #checks if the named file exists
     def gets_w_classes(self,file_w_class_name):
         file = open(file_w_class_name,'wb')
@@ -106,7 +93,7 @@ class BayesClassifier:
     def predict(self, x):
         probs = np.array([self.p_w_x(x, index) for (index, c) in enumerate(self.classes)])
         max_index = np.argmax(probs)
-        return [max_index, self.classes[max_index]]
+        return max_index
 
     def evaluate(self, X, Y):
         num_total = 0.0
@@ -116,7 +103,7 @@ class BayesClassifier:
         for (index, row) in enumerate(X):
             current_index = Y[index]
             row_values = row
-            predicted_index = self.predict(row_values)[0]
+            predicted_index = self.predict(row_values)
             if predicted_index == current_index:
                 num_right += 1.0
             else:
@@ -124,14 +111,3 @@ class BayesClassifier:
             num_total += 1.0
 
         return num_right/num_total
-
-    def create_views(self):
-        shape_columns=["REGION-CENTROID-COL", "REGION-CENTROID-ROW", "REGION-PIXEL-COUNT", "SHORT-LINE-DENSITY-5", "SHORT-LINE-DENSITY-2", "VEDGE-MEAN", "VEDGE-SD", "HEDGE-MEAN", "HEDGE-SD", "INTENSITY-MEAN"]
-        rgb_columns=["RAWRED-MEAN", "RAWBLUE-MEAN", "RAWGREEN-MEAN", "EXRED-MEAN", "EXBLUE-MEAN", "EXGREEN-MEAN", "VALUE-MEAN", "SATURATION-MEAN","HUE-MEAN"]
-        df = self.data_frame
-        shape_view = df[shape_columns].copy()
-        self.persist(shape_view, "shape_view.pickle")
-        self.shape_view = shape_view
-        rgb_view = df[rgb_columns].copy()
-        self.persist(rgb_view,"rgb_view.pickle")
-        self.rgb_view = rgb_view
