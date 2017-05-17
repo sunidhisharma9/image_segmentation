@@ -8,11 +8,15 @@ shape_accuracies_bayes = pickle.load(open('result_pickles/accuracies_SHAPE.pickl
 rgb_accuracies_knn = pickle.load(open('result_pickles/accuracies_RGB_knn.pickle', 'rb'))
 shape_accuracies_knn = pickle.load(open('result_pickles/accuracies_SHAPE_knn.pickle', 'rb'))
 
+accuracies_majority = pickle.load(open('result_pickles/accuracies_majority_full.pickle', 'rb'))
+
 rgb_np_bayes = np.array(rgb_accuracies_bayes)
 shape_np_bayes = np.array(shape_accuracies_bayes)
 
 rgb_np_knn = np.array(rgb_accuracies_knn)
 shape_np_knn = np.array(shape_accuracies_knn)
+
+majority_np = np.array(accuracies_majority)
 
 def create_IC_interval(np_array):
     t_29_0475 = 2.0452
@@ -46,3 +50,9 @@ ic_knn_shape = create_IC_interval(shape_np_knn)
 print 'SHAPE'
 print 'Mean', ic_knn_shape[0]
 print 'IC 95 [', ic_knn_shape[1], ',' , ic_knn_shape[2], ']'
+
+print 'MAJORITY-----------'
+
+ic_majority = create_IC_interval(majority_np)
+print 'Mean', ic_majority[0]
+print 'IC 95 [', ic_majority[1], ',' , ic_majority[2], ']'
