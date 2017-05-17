@@ -46,7 +46,7 @@ class KnnClassifier:
             else:
                 classes[n[1]] = 1
         votes = sorted(classes.items(), key=operator.itemgetter(1), reverse=True)
-        return votes[0]
+        return votes[0][0]
 
     def evaluate(self, X, Y):
         num_total = 0.0
@@ -56,7 +56,7 @@ class KnnClassifier:
         for (index, row) in enumerate(X):
             current_index = Y[index]
             row_values = row
-            predicted_index = self.predict(row_values)[0]
+            predicted_index = self.predict(row_values)
             if predicted_index == current_index:
                 num_right += 1.0
             else:
