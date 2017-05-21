@@ -9,6 +9,7 @@ import warnings
 import random
 
 from KnnClassifier import *
+from MajorityVoteClassifier import *
 
 # ignore warnings
 warnings.filterwarnings('ignore')
@@ -230,17 +231,54 @@ def make_30_fold_test(data_vectorizer):
     return accuracies
 
 
+def get_Xr_pow2(rank_tmp):
+
+    #n = number_of_rows
+    n = rank_tmp.__len__()
+
+    #k = number_of_columns
+    k = rank_tmp[0].__len__()
+
+    RjPow2 = 0
+    xr_pow_2 = 0
+
+    #Rj = sum of the results per columns,
+    # in this case we've only one value for each group/column
+    for r in xrange(n):
+        for j in xrange(k):
+            value = rank_tmp[r-1][j]
+            RjPow2 += pow(value, 2)
+
+
+    #xr_pow_2 = (12/n * k*(k+1)*[RjPow2-3*n(k+1)]
+    calc_part_1 = n*k*(k+1)
+    calc_part_1 = 12/calc_part_1
+    calc_part_2 = (3*n)*(k+1)
+    calc_part_2 = RjPow2-calc_part_2
+    xr_pow_2 = calc_part_1*calc_part_2
+    pass
+
+
 def friedman_test(dv):
 
     y = dv.Y
     #Sorting from minimal to maximal values
     x = np.sort(dv.X)
     classes = dv.classes
- #   bc = BayesClassifier(x, y, classes)
- #   knn = KnnClassifier(x, y, 7)
- #   knn_votes = knn.evaluate(x,y)
- #   bayes_result = bc.evaluate(x, y)
-    knn_result = 0
+
+    #Majority_votes
+    votes = []
+
+    #Instantiate classifiers
+    bc = BayesClassifier(x, y, classes)
+    knn = KnnClassifier(x, y, 7)
+    #mv = MajorityVoteClassifier(x, y, classes)
+
+    knn_votes = knn.evaluate(x,y)
+    bayes_result = bc.evaluate(x, y)
+    #votes = mv.predict(x)
+    majority_result = 0.88
+
     num_of_rows = len(y)
     num_of_columns = len(x[0])
     num_of_classes = len(classes)
@@ -251,6 +289,51 @@ def friedman_test(dv):
             new_ndarray[w_tmp][x_tmp+1] = x[w_tmp][x_tmp]
     # Creating an empty rank
     rank = create_empty_rank(num_of_classes=num_of_classes)
+
+    classifiers = ['Bayes', 'Knn', 'Majority']
+    table_of_values = np.zeros(shape=(1, classifiers.__len__()))
+    for x in xrange(table_of_values.__len__()):
+        table_of_values[x][0] = bayes_result
+        table_of_values[x][1] = knn_votes
+        table_of_values[x][2] = majority_result
+
+    rank_tmp = np.zeros(shape=(1, 3))
+
+    for c in table_of_values:
+        max_value = np.max(c)
+        min_value = np.min(c)
+        for value in c:
+            for i in xrange(rank_tmp.__len__()):
+                if value == max_value:
+                    if rank_tmp[0][i] == 0:
+                        rank_tmp[0][i] = classifiers.__len__()
+                    else:
+                        rank_tmp[0][i+1] = classifiers.__len__()
+                if value == min_value:
+                    if rank_tmp[0][i] == 0:
+                        rank_tmp[0][i] = classifiers.__len__() - 2
+                    else:
+                        rank_tmp[0][i+1] = classifiers.__len__() - 2
+                else:
+                    if rank_tmp[0][i] == 0:
+                        rank_tmp[0][i] = classifiers.__len__() - 1
+                    else:
+                        if rank_tmp[0][i+1] == 0:
+                            rank_tmp[0][i+1] = classifiers.__len__() - 1
+                        else:
+                            rank_tmp[0][i+2] = classifiers.__len__() - 1
+
+
+    sum_weights = 0
+
+    for lk in xrange(rank_tmp.__len__()):
+        for c in xrange(rank_tmp[lk].__len__()):
+            sum_weights += rank_tmp[lk][c]
+            rank_tmp[lk][c] = sum_weights
+            sum_weights = 0
+
+    x_r_pow_2 = get_Xr_pow2(rank_tmp)
+
     rank_length=rank.__len__()
     sum_x = 0
     for new_w in xrange(num_of_classes):
