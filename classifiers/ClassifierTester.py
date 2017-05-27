@@ -14,7 +14,7 @@ from classifiers.MajorityVoteClassifier import *
 class ClassifierTester:
 
     @staticmethod
-    def make_n_fold_test(data_vectorizer, n, type_classifier='bayes'):
+    def make_n_fold_test(data_vectorizer, n):
         X = data_vectorizer.X
         Y = data_vectorizer.Y
         classes = data_vectorizer.classes
@@ -25,6 +25,9 @@ class ClassifierTester:
         X_for_class = []
         X_index = [(index, x) for (index, x) in enumerate(X)]
 
+        size_view_shape = 9
+        size_view_rgb = 10
+        
         for i in xrange(num_classes):
             separated_X = [[x,i] for (index, x) in X_index if Y[index]==i]
             random.shuffle(separated_X)
@@ -42,29 +45,52 @@ class ClassifierTester:
             folds.append(new_fold)
 
         print 'Folds created'
-        accuracies = []
+        accuracies_bayes_shape = []
+        accuracies_bayes_rgb = []
+        accuracies_knn_shape = []
+        accuracies_knn_rgb = []
+        accuracies_majority = []
+        
         for k in xrange(n):
+            print 'Iteration', k , 'of', n
             test = folds[k]
             train = []
             for i in xrange(n):
                 if i != k:
                     train += folds[i]
+
             X_train = np.array([t[0] for t in train])
             Y_train = np.array([t[1] for t in train]).ravel()
             X_test = np.array([t[0] for t in test])
             Y_test = np.array([t[1] for t in test]).ravel()
 
+            len_train = np.shape(X_train)[0]
+            len_test = np.shape(X_test)[0]
+            
+            shape_mapping_train = np.ix_(range(len_train), range(size_view_shape))
+            shape_mapping_test = np.ix_(range(len_test), range(size_view_shape))
+            rgb_mapping_train = np.ix_(range(len_train), range(size_view_shape, size_view_shape + size_view_rgb))
+            rgb_mapping_test = np.ix_(range(len_test), range(size_view_shape, size_view_shape + size_view_rgb)) 
 
-            if type_classifier == 'bayes':
-                classifier = BayesClassifier(X_train, Y_train, classes)
-            elif type_classifier == 'knn':
-                classifier = KnnClassifier(X_train, Y_train, 1)
-            elif type_classifier == 'majority':
-                classifier = MajorityVoteClassifier(X_train, Y_train, classes)
-            else:
-                raise ValueError('Unknown classifier: ' + type_classifier)
-                
-            new_accuracy = classifier.evaluate(X_test, Y_test)
-            print 'Accuracy', k, 'of', n , new_accuracy
-            accuracies.append(new_accuracy)
+            X_train_shape = X_train[shape_mapping_train]
+            X_test_shape = X_test[shape_mapping_test]
+            X_train_rgb = X_train[rgb_mapping_train]
+            X_test_rgb = X_test[rgb_mapping_test]
+            
+            classifier_bayes_shape = BayesClassifier(X_train_shape, Y_train, classes)
+            classifier_bayes_rgb = BayesClassifier(X_train_rgb, Y_train, classes)
+            classifier_knn_shape = KnnClassifier(X_train_shape, Y_train, 1)
+            classifier_knn_rgb = KnnClassifier(X_train_rgb, Y_train, 1)
+            classifier_majority = MajorityVoteClassifier(X_train, Y_train, classes)
+
+            accuracies_bayes_shape.append(classifier_bayes_shape.evaluate(X_test_shape, Y_test))
+            accuracies_bayes_rgb.append(classifier_bayes_rgb.evaluate(X_test_rgb, Y_test))
+            accuracies_knn_shape.append(classifier_knn_shape.evaluate(X_test_shape, Y_test))
+            accuracies_majority.append(classifier_majority.evaluate(X_test, Y_test))
+
+        accuracies = {'accuracies_bayes_shape': accuracies_bayes_shape,
+                      'accuracies_bayes_rgb': accuracies_bayes_rgb,
+                      'accuracies_knn_shape': accuracies_knn_shape,
+                      'accuracies_knn_rgb': accuracies_knn_rgb}
+        
         return accuracies
