@@ -79,18 +79,20 @@ class ClassifierTester:
             
             classifier_bayes_shape = BayesClassifier(X_train_shape, Y_train, classes)
             classifier_bayes_rgb = BayesClassifier(X_train_rgb, Y_train, classes)
-            classifier_knn_shape = KnnClassifier(X_train_shape, Y_train, 1)
-            classifier_knn_rgb = KnnClassifier(X_train_rgb, Y_train, 1)
+            classifier_knn_shape = KnnClassifier(X_train_shape, Y_train, 7)
+            classifier_knn_rgb = KnnClassifier(X_train_rgb, Y_train, 7)
             classifier_majority = MajorityVoteClassifier(X_train, Y_train, classes)
 
             accuracies_bayes_shape.append(classifier_bayes_shape.evaluate(X_test_shape, Y_test))
             accuracies_bayes_rgb.append(classifier_bayes_rgb.evaluate(X_test_rgb, Y_test))
             accuracies_knn_shape.append(classifier_knn_shape.evaluate(X_test_shape, Y_test))
+            accuracies_knn_rgb.append(classifier_knn_rgb.evaluate(X_test_rgb, Y_test))
             accuracies_majority.append(classifier_majority.evaluate(X_test, Y_test))
 
         accuracies = {'accuracies_bayes_shape': accuracies_bayes_shape,
                       'accuracies_bayes_rgb': accuracies_bayes_rgb,
                       'accuracies_knn_shape': accuracies_knn_shape,
-                      'accuracies_knn_rgb': accuracies_knn_rgb}
+                      'accuracies_knn_rgb': accuracies_knn_rgb,
+                      'accuracies_majority': accuracies_majority}
         
         return accuracies
