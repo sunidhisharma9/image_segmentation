@@ -2,6 +2,7 @@
 #Chi_square table used
 # https://www.medcalc.org/manual/chi-square-table.php
 
+import pickle
 import pandas as pd
 import numpy as np
 import warnings
@@ -12,12 +13,14 @@ warnings.filterwarnings('ignore')
 
 class FriedmanTest:
 
-    def __init__(self, bayes_result=None, knn_result=None, majority_result=None):
+    def __init__(self, bayes_result=None, knn_result=None, majority_result=None, all_results=None):
         self.data_frame = None
+        self.all_accuracies = None
         self.bayes_result = bayes_result
         self.knn_result = knn_result
         self.majority_result = majority_result
         self.n_rows = None
+        self.all_results = all_results
 
         if bayes_result is None:
             raise ValueError('No result for Bayes Classifier defined')
@@ -25,6 +28,8 @@ class FriedmanTest:
             raise ValueError('No result for KNN Classifier defined')
         if majority_result is None:
             raise ValueError('No result for Majority Vote Classifier defined')
+        if all_results is None:
+            raise ValueError('No Array Results were found')
 
         self.read_from_csv('chi_square.csv')
 
@@ -32,27 +37,28 @@ class FriedmanTest:
         print 'Reading Chi-Square table...'
         self.data_frame = pd.read_csv(filename, sep=",", header=0)
 
+    def get_from_pickle_pandas(self, filename):
+        self.all_accuracies = pd.read_pickle(filename)
+
     @staticmethod
-    def get_xr_pow2(rank_tmp):
+    def get_xr_pow2(rank_tmp, n, k):
         # n = number_of_rows
-        n = rank_tmp.__len__()
+        n = n
 
         # k = number_of_columns
-        k = rank_tmp[0].__len__()
+        k = k
 
         RjPow2 = 0
         xr_pow_2 = 0
 
         # Rj = sum of the results per columns,
         # in this case we've only one value for each group/column
-        for r in xrange(n):
-            for j in xrange(k):
-                value = rank_tmp[r - 1][j]
-                RjPow2 += pow(value, 2)
+        value = np.sum(rank_tmp, axis=0)
+        RjPow2 += pow(value, 2)
 
         # xr_pow_2 = (12/n * k*(k+1)*[RjPow2-3*n(k+1)]
-        calc_part_1 = n * k * (k + 1)
-        calc_part_1 = 12 / calc_part_1
+        calc_part_1 = (n * k) * (k + 1)
+        calc_part_1 = 12.0 / calc_part_1
         calc_part_2 = (3 * n) * (k + 1)
         calc_part_2 = RjPow2 - calc_part_2
         xr_pow_2 = calc_part_1 * calc_part_2
@@ -97,49 +103,53 @@ class FriedmanTest:
         majority = self.majority_result
 
         classifiers = ['Bayes', 'Knn', 'Majority']
-        table_of_values = np.zeros(shape=(1, classifiers.__len__()))
-        for x in xrange(table_of_values.__len__()):
-            table_of_values[x][0] = bayes
-            table_of_values[x][1] = knn
-            table_of_values[x][2] = majority
+        table_of_values = self.all_results
+        results = self.all_results
 
-        rank_tmp = np.zeros(shape=(1, 3))
+        rank_tmp = np.zeros(shape=(table_of_values.__len__(), table_of_values[0].__len__()))
+        value_found = False
+        for g in table_of_values:
+            max_value = np.max(g)
+            min_value = np.min(g)
 
-        for c in table_of_values:
-            max_value = np.max(c)
-            min_value = np.min(c)
-            for value in c:
-                for i in xrange(rank_tmp.__len__()):
-                    if value == max_value:
-                        if rank_tmp[0][i] == 0:
-                            rank_tmp[0][i] = classifiers.__len__()
+            for value in g: #for each value in group...
+                value_found = False
+                l = rank_tmp.__len__()
+                l_a = rank_tmp[0].__len__()
+
+                # k = loops over lines
+                for k in xrange(rank_tmp.__len__()):
+                    if value_found is True:
+                        break
+
+                    # c - loops over columns
+                    for c in xrange(rank_tmp[0].__len__()):
+                        if value == max_value:
+                            if rank_tmp[k][c] == 0:
+                                rank_tmp[k][c] = classifiers.__len__()
+                                value_found = True
+                                break
+                        if value == min_value:
+                            if rank_tmp[k][c] == 0:
+                                rank_tmp[k][c] = classifiers.__len__() - 2
+                                value_found = True
+                                break
                         else:
-                            rank_tmp[0][i + 1] = classifiers.__len__()
-                    if value == min_value:
-                        if rank_tmp[0][i] == 0:
-                            rank_tmp[0][i] = classifiers.__len__() - 2
-                        else:
-                            rank_tmp[0][i + 1] = classifiers.__len__() - 2
-                    else:
-                        if rank_tmp[0][i] == 0:
-                            rank_tmp[0][i] = classifiers.__len__() - 1
-                        else:
-                            if rank_tmp[0][i + 1] == 0:
-                                rank_tmp[0][i + 1] = classifiers.__len__() - 1
-                            else:
-                                rank_tmp[0][i + 2] = classifiers.__len__() - 1
+                            if rank_tmp[k][c] == 0:
+                                rank_tmp[k][c] = classifiers.__len__() - 1
+                                value_found = True
+                                break
 
         sum_weights = 0
 
-        for lk in xrange(rank_tmp.__len__()):
-            for c in xrange(rank_tmp[lk].__len__()):
-                sum_weights += rank_tmp[lk][c]
-                rank_tmp[lk][c] = sum_weights
-                sum_weights = 0
+        sum_all_weights = np.sum(rank_tmp, axis=0)
 
-        x_r_pow_2 = self.get_xr_pow2(rank_tmp)
+        n = rank_tmp.__len__()
+        k = rank_tmp[0].__len__()
 
-        #get number of rows
+        x_r_pow_2 = self.get_xr_pow2(sum_all_weights, n, k)
+
+        #get number of rows (groups)
         n = rank_tmp.__len__()
 
         is_approved = self.evaluate_classifiers(n, x_r_pow_2)
@@ -157,7 +167,12 @@ class FriedmanTest:
 # ---------------
 
 # Begin
-
-ft = FriedmanTest(bayes_result=0.79, knn_result=0.89, majority_result=0.88)
+arr = np.zeros(shape=(2, 3))
+arr[0][0]=0.79
+arr[0][1]=0.89
+arr[0][2]=0.88
+arr[1][0]=0.55
+arr[1][1]=0.80
+arr[1][2]=0.81
+ft = FriedmanTest(bayes_result=0.79, knn_result=0.89, majority_result=0.88, all_results=arr)
 ft.friedman_test()
-
