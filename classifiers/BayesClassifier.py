@@ -12,9 +12,7 @@ class BayesClassifier:
         self.X = X
         self.Y = Y
 
-        print 'Getting a priori probabilities'
         self.get_w_frequency()
-        print 'Calculate the probabilities distributions by the max likelihood method'
         self.calculate_prob_diss_classes()
 
 
