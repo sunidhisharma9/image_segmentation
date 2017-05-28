@@ -8,36 +8,62 @@ import matplotlib.pyplot as plt
 from classifiers.DataVectorizer import *
 from classifiers.KnnClassifier import *
 
-print 'Testing RGB view'
 dv = DataVectorizer(filename='result_pickles/full_view.pickle')
-tam_x = np.shape(dv.X)[0]
-all_data = []
 
-print 'Creating Data set'
-for i in xrange(tam_x):
-    all_data.append([dv.X[i], dv.Y[i]])
+n = 10 # We are using 10 fold
 
-accuracies = []
+X = dv.X
+Y = dv.Y
+classes = dv.classes
+num_classes = len(classes)
+num_elements = np.shape(X)[0]
+num_elements_for_class = (num_elements/n)/num_classes
+
+X_for_class = []
+X_index = [(index, x) for (index, x) in enumerate(X)]
 
 size_view_shape = 9
 size_view_rgb = 10
 
-for i in xrange(10):
+accuracies = []
+
+for i in xrange(10): #All Ks in the form 2*i + 1
+    K = 2*i + 1
+    print 'Testing K', K
     mean_accuracies = 0
-    for j in xrange(10):
-        random.shuffle(all_data)
 
-        len_all_data = len(all_data)
-        size_train = int(0.7*float(len_all_data))
-        size_validation = int(0.15*float(len_all_data))
-        size_test = int(0.15*float(len_all_data))
+    for j in xrange(10): #Make 10 fold 10 times
+        print 'Making', n, 'fold', j + 1, 'of 10'
+        for c in xrange(num_classes):
+            separated_X = [[x,c] for (index, x) in X_index if Y[index]==c]
+            random.shuffle(separated_X)
+            X_for_class.append(separated_X)
 
-        train = all_data[:size_train]
-        validation = all_data[size_train+1:size_train + size_validation]
-        X_train = np.array([x for (x,y) in train])
-        Y_train = np.array([y for (x,y) in train])
-        X_validation = np.array([x for (x,y) in validation])
-        Y_validation = np.array([y for (x,y) in validation])
+        folds = []
+
+        for k in xrange(n):
+            low_index = k*num_elements_for_class
+            high_index = low_index + num_elements_for_class
+            new_fold = []
+            for c in xrange(num_classes):
+                new_fold += X_for_class[c][low_index:high_index]
+            random.shuffle(new_fold)
+            folds.append(new_fold)
+
+
+        test = folds[1]
+        train = []
+        for f in xrange(n):
+            if f != 1:
+                train += folds[f]
+
+        len_train = len(train)
+        size_train = int(float(5.0*len_train/6.0))
+        
+        X_train = np.array([t[0] for t in train[:size_train]])
+        Y_train = np.array([t[1] for t in train[:size_train]]).ravel()
+        X_validation = np.array([t[0] for t in train[size_train:]])
+        Y_validation = np.array([t[1] for t in train[size_train:]]).ravel()
 
         len_train = np.shape(X_train)[0]
         len_validation = np.shape(X_validation)[0]
@@ -47,8 +73,6 @@ for i in xrange(10):
         rgb_mapping_train = np.ix_(range(len_train), range(size_view_shape, size_view_shape + size_view_rgb))
         rgb_mapping_validation = np.ix_(range(len_validation), range(size_view_shape, size_view_shape + size_view_rgb)) 
 
-        print 'Iteration', i + 1, 'of 10'
-        K = 2*i + 1
         knn_rgb = KnnClassifier(X_train[rgb_mapping_train], Y_train, K)
         knn_shape = KnnClassifier(X_train[shape_mapping_train], Y_train, K)
         new_accuracy_rgb = knn_rgb.evaluate(X_validation[rgb_mapping_validation], Y_validation)
