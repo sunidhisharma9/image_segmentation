@@ -79,8 +79,8 @@ class ClassifierTester:
             
             classifier_bayes_shape = BayesClassifier(X_train_shape, Y_train, classes)
             classifier_bayes_rgb = BayesClassifier(X_train_rgb, Y_train, classes)
-            classifier_knn_shape = KnnClassifier(X_train_shape, Y_train, 7)
-            classifier_knn_rgb = KnnClassifier(X_train_rgb, Y_train, 7)
+            classifier_knn_shape = KnnClassifier(X_train_shape, Y_train, 3)
+            classifier_knn_rgb = KnnClassifier(X_train_rgb, Y_train, 3)
             classifier_majority = MajorityVoteClassifier(X_train, Y_train, classes)
 
             accuracies_bayes_shape.append(classifier_bayes_shape.evaluate(X_test_shape, Y_test))
