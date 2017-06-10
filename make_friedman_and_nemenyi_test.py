@@ -39,11 +39,14 @@ k = float(num_classifiers)
 
 sum_squared_ranks = float(np.sum(pow(mean_ranks, 2)))
 
-statistic = ((12.0*tam_test)/(k*(k+1)))*(sum_squared_ranks - k*pow(k+1,2)/4.0)
+chi_square = ((12.0*tam_test)/(k*(k+1)))*(sum_squared_ranks - k*pow(k+1,2)/4.0)
+statistic = ((tam_test - 1)*chi_square)/(tam_test*(k-1) - chi_square)
+print 'tam_test', tam_test
+print 'k', k
+print 'chi_square', chi_square
 print 'Statistic', statistic
 
-# https://www.medcalc.org/manual/chi-square-table.php (para alpha=0.05 e 5 - 1 graus de liberdade) temos
-compare_val = 9.488
+compare_val = 2.7858
 
 if statistic > compare_val:
     print 'The classifiers are different'
@@ -59,4 +62,4 @@ name_of_classifiers = ['bayes rgb', 'bayes shape', 'knn rgb', 'knn shape', 'majo
 for i, n1 in enumerate(name_of_classifiers):
     for j , n2 in enumerate(name_of_classifiers):
         if i != j:
-            print 'Is', n1, 'different from', n2, '?', abs(mean_ranks[i] - mean_ranks[j]) > critical_val
+            print 'Is', n1, 'different from', n2, '?', abs(mean_ranks[i] - mean_ranks[j]) > critical_val, 'diff', abs(mean_ranks[i] - mean_ranks[j])
