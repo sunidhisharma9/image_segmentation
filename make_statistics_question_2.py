@@ -17,37 +17,42 @@ def create_IC_interval(np_array):
     std_array = np.std(np_array, ddof=1)
     int_lower_array = mean_array - t_val*std_array/np.sqrt(len_array)
     int_high_array = mean_array + t_val*std_array/np.sqrt(len_array)
-    return [mean_array, int_lower_array, int_high_array]
+    return [mean_array, std_array, int_lower_array, int_high_array]
 
 print 'BAYES-----------'
 
 ic_bayes_rgb = create_IC_interval(bayes_rgb)
 print 'RGB'
 print 'Mean', ic_bayes_rgb[0]
-print 'IC 95 [', ic_bayes_rgb[1], ',' , ic_bayes_rgb[2], ']'
+print 'Std', ic_bayes_rgb[1]
+print 'IC 95 [', ic_bayes_rgb[2], ',' , ic_bayes_rgb[3], ']'
 
 ic_bayes_shape = create_IC_interval(bayes_shape)
 print 'SHAPE'
 print 'Mean', ic_bayes_shape[0]
-print 'IC 95 [', ic_bayes_shape[1], ',' , ic_bayes_shape[2], ']'
+print 'Std', ic_bayes_shape[1]
+print 'IC 95 [', ic_bayes_shape[2], ',' , ic_bayes_shape[3], ']'
 
 print 'KNN-----------'
 
 ic_knn_rgb = create_IC_interval(knn_rgb)
 print 'RGB'
 print 'Mean', ic_knn_rgb[0]
-print 'IC 95 [', ic_knn_rgb[1], ',' , ic_knn_rgb[2], ']'
+print 'Std', ic_knn_rgb[1]
+print 'IC 95 [', ic_knn_rgb[2], ',' , ic_knn_rgb[3], ']'
 
 ic_knn_shape = create_IC_interval(knn_shape)
 print 'SHAPE'
 print 'Mean', ic_knn_shape[0]
-print 'IC 95 [', ic_knn_shape[1], ',' , ic_knn_shape[2], ']'
+print 'Std', ic_knn_shape[1]
+print 'IC 95 [', ic_knn_shape[2], ',' , ic_knn_shape[3], ']'
 
 print 'MAJORITY-----------'
 
 ic_majority = create_IC_interval(majority)
 print 'Mean', ic_majority[0]
-print 'IC 95 [', ic_majority[1], ',' , ic_majority[2], ']'
+print 'Std', ic_majority[1]
+print 'IC 95 [', ic_majority[2], ',' , ic_majority[3], ']'
 
 
 print 'Saving histograms'
