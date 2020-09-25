@@ -1,4 +1,4 @@
-This project's objective is to study the UCI's Image Segmentation Dataset
+This project's objective is to study the UCI's IMAGE SEGMENTATION Dataset
 
 http://archive.ics.uci.edu/ml/machine-learning-databases/image
 
